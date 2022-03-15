@@ -1,0 +1,4 @@
+strpgmexp pgmlvl(*current)
+  export symbol(throw)
+  export symbol(catch)
+endpgmexp

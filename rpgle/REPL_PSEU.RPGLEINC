@@ -1,0 +1,133 @@
+**FREE
+
+/If Defined(REPL_PSEU)
+/EoF
+/EndIf
+/Define REPL_PSEU
+
+/include repl_eval
+/include repl_pseut
+
+// Clear the current session existing code from the
+//   REPLSRC table.
+dcl-pr clearSessionPseudoCode;
+  sessionId char(28) const options(*nopass);
+end-pr;
+// Clear the current session existing results from the
+//   REPLRSLT table.
+dcl-pr clearSessionPseudoResults;
+  sessionId char(28) const options(*nopass);
+end-pr;
+// Clear the current session existing variables from the
+//   REPLVARS table.
+dcl-pr clearSessionPseudoVariables;
+  sessionId char(28) const options(*nopass);
+end-pr;
+
+// Prepare a cursor to return all the existing code for this
+//   session from the REPLSRC table.
+// This will not include any lines after the last non-blank
+//   line.
+// The code can be returned with fetchLineOfPseudoCode.
+dcl-pr prepareFetchLinesOfPseudoCode;
+  sourceFile likeds(t_referenceSource) const options(*nopass);
+  startingLine like(t_lineOfCode.line) const options(*nopass);
+end-pr;
+
+// Return all the existing code for this session from the
+//   REPLSRC table.
+// This must be prepared with prepareFetchLinesOfPseudoCode.
+dcl-pr fetchLineOfPseudoCode ind;
+  lineOfCode likeds(t_lineOfCode);
+  replCode ind const;
+end-pr;
+
+// Add a single line of code for this session to the REPLSRC table.
+dcl-pr storeLineOfPseudoCode;
+  lineOfCode likeds(t_lineOfCode) const;
+end-pr;
+
+// Insert a new blank line for this session in the REPLSRC table.
+// This can be inserted between existing lines of code. Subsequent
+// lines of code will have their line number incremented.
+dcl-pr insertNewLineOfPseudoCode;
+  line like(t_lineOfCode.line) const;
+end-pr;
+
+// Split an existing line for this session in the REPLSRC table.
+// Subsequent lines of code will have their line number incremented.
+dcl-pr splitLineOfPseudoCode;
+  line like(t_lineOfCode.line) const;
+  column packed(3) const;
+end-pr;
+
+// Delete a line for this session in the REPLSRC table.
+// Subsequent lines will have their line number decremented.
+dcl-pr deleteLineOfPseudoCode;
+  line like(t_lineOfCode.line) const;
+end-pr;
+
+// Prepare a cursor to return all stored results for this session
+//   and line number in the REPLRSLT table.
+// Results can be returned using fetchResultForLineOfCode.
+dcl-pr prepareFetchResultForLineOfCode;
+  line like(t_lineOfCode.line) const;
+end-pr;
+
+// Return each of the results for a single line number and this
+//   session in the REPLRSLT table.
+// This must be prepared with prepareFetchResultForLineOfCode.
+dcl-pr fetchResultForLineOfCode ind;
+  result like(t_result);
+end-pr;
+
+// Housework: Remove any snippets from the database which are
+//  completely blank.
+dcl-pr removeUnusedSnippets end-pr;
+
+// Prepare a list of stored snippets for a particular user,
+//  or blank for all users.
+// The indicators allows you to specify whether snippets
+//  stored to a particular session, or to a particular
+//  save name should be returned.
+dcl-pr prepareFetchStoredSnippets;
+  snippetsForUser char(10) const;
+  savedSnippets ind const;
+end-pr;
+
+// Fetch the next stored snippet given the parameters
+//  specified in prepareFetchStoredSnippets
+dcl-pr fetchStoredSnippets ind;
+  storedSnippet likeds(t_storedSnippet);
+end-pr;
+
+// Store the contents of the current session to a save file
+//  belonging to the current user.
+// Overwrites any existing save files with the same name
+//  belonging to the current user.
+dcl-pr storeSessionToSaveFile;
+  saveFile char(20) const;
+end-pr;
+
+// Restores a selected save file to the current session.
+dcl-pr restoreSaveFileToSession;
+  owner char(10) const;
+  saveFile char(20) const;
+end-pr;
+
+// Restores a selected save file to the current session.
+dcl-pr restoreSessionToSession;
+  sessionId char(28) const;
+end-pr;
+
+// Checks if a particular save file exists for a given owner.
+dcl-pr saveFileExistsForOwner ind;
+  owner char(10) const;
+  saveFile char(20) const;
+end-pr;
+
+// Deletes a particular save file for a given owner.
+dcl-pr deleteSaveFileForOwner;
+  owner char(10) const;
+  saveFile char(20) const;
+end-pr;

@@ -1,0 +1,6 @@
+strpgmexp pgmlvl(*current)
+  export symbol(insertSingleLineOfGeneratedCode)
+  export symbol(codeIsFixedFormat)
+  export symbol(createSqlAlias)
+  export symbol(dropSqlAlias)
+endpgmexp

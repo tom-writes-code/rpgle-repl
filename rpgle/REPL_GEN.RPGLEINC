@@ -1,0 +1,21 @@
+**FREE
+
+/If Defined(REPL_GEN)
+/EoF
+/EndIf
+/Define REPL_GEN
+
+// Using the pseudo code stored in the repl_pseudo_source_code table,
+//   generate the required repl source object.
+// This combines several discrete tasks:
+//   o Create / Clear the repl source object
+//   o Set up an SQL alias to the repl source object
+//   o Add default control options
+//   o Add default reference source
+//   o Add pseudo code to the repl source object, storing
+//      details of the variables as we go
+//   o Create the repl helper procedures
+//   o Add sqlcheck reference source
+dcl-pr createGeneratedSourceObject end-pr;
+
+dcl-pr refreshGeneratedSourceObject end-pr;

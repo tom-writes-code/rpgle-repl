@@ -1,0 +1,185 @@
+**FREE
+
+/If Defined(REPL_VARS)
+/EoF
+/EndIf
+/Define REPL_VARS
+
+/include repl_pseu
+
+dcl-ds t_variable qualified template;
+  name char(70);
+  type char(10);
+  arraySize packed(10);
+  parentName char(70);
+  parentArraySize packed(10);
+  scope char(70);
+  definition char(50);
+  template char(1);
+  defined char(1);
+  id packed(18);
+  used char(1);
+end-ds;
+
+// Given a complete line of code, does the string start with:
+//  o DCL-DS
+// OR
+// Given a complete line of code, does the string contain:
+//  o LIKEDS
+//  o LIKEREC
+// This function is case-insensitive.
+dcl-pr dataStructureStartFound ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a complete line of code, does the string contain:
+//  o END-DS
+// This function is case-insensitive.
+dcl-pr dataStructureEndFound ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a complete line of code, does the string start with:
+//  o DCL-S
+// This function is case-insensitive.
+dcl-pr variableDefinitionFound ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a complete line of code, does the string start with:
+//  o DCL-C
+// This function is case-insensitive.
+dcl-pr constantDefinitionFound ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a complete line of code containing a data structure
+//   definition (defined with DCL-DS), extract and store
+//   the following information to the REPLVARS table:
+//     o DATA_STRUCTURE_NAME
+//     o Whether the DS is qualified or not
+//     o Data structure arrays size (DIM or OCCURS)
+//     o The parent of this DS (if it has one)
+// This will be stored with type datastruct.
+dcl-pr storeDataStructureDefinition like(t_variable.name);
+  code like(t_longLineOfCode) const;
+  scope like(t_variable.scope) const;
+  parentDataStructure like(t_variable.name) const;
+end-pr;
+
+// Given a complete line of code containing a variable
+//   definition (defined with DCL-S), extract and store
+//   the following information to the REPLVARS table:
+//     o VARIABLE_NAME
+//     o VARIABLE_TYPE:
+//       o character
+//       o numeric
+//       o indicator
+//       o date
+//       o time
+//       o timestamp
+//     o Data structure arrays size (DIM or OCCURS)
+// This will be stored with type datastruct.
+dcl-pr storeVariableDefinition;
+  code like(t_longLineOfCode) const;
+  parentDataStructure like(t_variable.name) const;
+  scope like(t_variable.scope) const;
+end-pr;
+
+// Given a complete line of code containing a constant
+//   definition (defined with DCL-C), extract and store
+//   the following information to the REPLVARS table:
+//     o VARIABLE_NAME
+//     o VARIABLE_TYPE:
+//       o constant
+dcl-pr storeConstantDefinition;
+  code like(t_longLineOfCode) const;
+  scope like(t_variable.scope) const;
+end-pr;
+
+// Given a variable name, extract all related data currently
+//   stored in the REPLVARS table.
+// System indicators (such as *IN99) are not stored to the
+//   database, but will return a valid object.
+// If the variable cannot be found in the database,
+//   a blank variable type is returned.
+// This function is case-insensitive.
+dcl-pr fetchStoredVariable likeds(t_variable);
+  variableName like(t_variable.name) const;
+  scope like(t_variable.scope) const;
+end-pr;
+
+// Given a complete line of code, determine the name of the
+//   variable being evaluated. Remove all array counters.
+dcl-pr fetchVariableNameFromStatement like(t_variable.name);
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a complete line of code such as:
+//   myVariable(1) = someOther;
+// Extract the element referred to by the result variable.
+//   In the above example, the returned value would be 1.
+// If no element is found or specified (including (*)), then
+//   a zero value is returned.
+dcl-pr fetchArrayElementFromStatement like(t_variable.arraySize);
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a data structure name, prepare an SQL cursor to return
+//   each of the subfields.
+// The results can be returned using fetchedDataStructureFields.
+// This function is case-insensitive.
+dcl-pr prepareListOfDataStructureFields;
+  dataStructureName like(t_variable.name) const;
+  scope like(t_variable.scope) const;
+end-pr;
+
+// Return each of the subfields belonging to a single data structure.
+// This function should be prepared with
+//   prepareListOfDataStructureFields.
+dcl-pr fetchedDataStructureFields ind;
+  variable likeds(t_variable);
+end-pr;
+
+// Prepare an SQL cursor to return all of the declared variables
+//   and data structures.
+// The results can be returned using fetchListOfVariables.
+dcl-pr prepareListOfVariables end-pr;
+
+// Return each of the declared variables.
+// This function should be prepared with prepareListOfVariables.
+dcl-pr fetchListOfVariables ind;
+  variable likeds(t_variable);
+end-pr;
+
+// Grab the procedure name from a DCL-PROC line of code.
+dcl-pr fetchProcedureNameFromStatement like(t_variable.scope);
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Does the string start dcl-proc?
+dcl-pr procedureDeclarationFound ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Does the string start dcl-pi?
+dcl-pr procedureInterfaceStart ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Does the string start end-pi?
+dcl-pr procedureInterfaceEnd ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// If we're using a variable, flag it here so that we'll
+// generate the helper procedures to record the result.
+// This should help cut down on the volume of broken procedures
+// we generate
+dcl-pr markVariableAsUsed;
+  variableId like(t_variable.id) const;
+end-pr;
+
+dcl-pr toUpperCase varchar(512);
+  lowerString varchar(512) const;
+end-pr;

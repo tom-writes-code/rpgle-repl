@@ -1,0 +1,13 @@
+strpgmexp pgmlvl(*current)
+  export symbol(evaluateLineOfPseudoCode)
+  export symbol(freeFormatEvaluationFound)
+  export symbol(endOfFreeFormatLineFound)
+  export symbol(codeIsComment)
+  export symbol(replresultEvaluationHelpers)
+  export symbol(replResult_evaluate_fld_single)
+  export symbol(replResult_evaluate_fld_multiple)
+  export symbol(replResult_evaluate_ds_single)
+  export symbol(replResult_evaluate_ds_multiple)
+  export symbol(separateReferenceSource)
+  export symbol(findMyMember)
+endpgmexp

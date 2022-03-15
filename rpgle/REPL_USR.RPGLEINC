@@ -1,0 +1,61 @@
+**FREE
+
+/If Defined(REPL_USR)
+/Eof
+/Endif
+/Define REPL_USR
+
+dcl-c c_program_exception 'rpl0003';
+dcl-c c_error_showing_generated_source 'rpl0004';
+dcl-c c_problem_starting_debug 'rpl0005';
+dcl-c c_problem_showing_spool_files 'rpl0006';
+dcl-c c_problem_showing_job_log 'rpl0007';
+dcl-c c_problem_showing_command_line 'rpl0008';
+
+// Run the generated program object. The location and name
+//   of this are defined as c_generatedSourceLibrary
+//   and c_generatedProgram.
+dcl-pr runGeneratedProgramObject end-pr;
+
+// Show the generated source object. The location and name
+//   of this are defined as c_generatedSourceLibrary,
+//   c_generatedSourceFile, and c_generatedSourceMember.
+// The source is shown using DSPPFM.
+dcl-pr showGeneratedSourceObject end-pr;
+
+// Debug the generated source object. The location and name
+//   of this are defined as c_generatedSourceLibrary,
+//   c_generatedSourceFile, and c_generatedSourceMember.
+// An environment variable to show debug mode in a 27x132 screen
+//   is automatically applied. SUTIL/DBG is used to start
+//   the debug mode.
+dcl-pr debugGeneratedSourceObject end-pr;
+
+// Show the user their latest spool files by running SUTIL/SP5.
+dcl-pr showUserSpoolFiles end-pr;
+
+// Show the user a command line interface.
+dcl-pr showCommandLine end-pr;
+
+// Show the user their current job log.
+dcl-pr showJobLog end-pr;
+
+dcl-pr runCommand;
+  command varchar(1024) const;
+  parm1 varchar(100) const options(*nopass);
+  parm2 varchar(100) const options(*nopass);
+  parm3 varchar(100) const options(*nopass);
+  parm4 varchar(100) const options(*nopass);
+  parm5 varchar(100) const options(*nopass);
+  parm6 varchar(100) const options(*nopass);
+end-pr;
+
+dcl-pr formatString varchar(1024);
+  message varchar(1024) const;
+  parm1  varchar(100) const;
+  parm2  varchar(100) const options(*nopass);
+  parm3  varchar(100) const options(*nopass);
+  parm4  varchar(100) const options(*nopass);
+  parm5  varchar(100) const options(*nopass);
+  parm6  varchar(100) const options(*nopass);
+end-pr;

@@ -1,0 +1,10 @@
+strpgmexp pgmlvl(*current)
+  export symbol(runGeneratedProgramObject)
+  export symbol(showGeneratedSourceObject)
+  export symbol(debugGeneratedSourceObject)
+  export symbol(showUserSpoolFiles)
+  export symbol(showCommandLine)
+  export symbol(showJobLog)
+  export symbol(runCommand)
+  export symbol(formatString)
+endpgmexp

@@ -1,0 +1,20 @@
+**FREE
+
+/If Defined(REPL_PM)
+/Eof
+/Endif
+/Define REPL_PM
+
+dcl-ds t_thrownError qualified template;
+  errorCode char(7);
+end-ds;
+
+dcl-ds t_caughtError qualified template;
+  errorCode char(7);
+end-ds;
+
+dcl-pr throw;
+  thrownError likeds(t_thrownError) value;
+end-pr;
+
+dcl-pr catch likeds(t_caughtError) end-pr;

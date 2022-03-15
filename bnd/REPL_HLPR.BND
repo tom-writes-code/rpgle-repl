@@ -1,0 +1,8 @@
+strpgmexp pgmlvl(*current)
+  export symbol(replHlpr_recordSqlResult)
+  export symbol(replHlpr_loop)
+  export symbol(replHlpr_unknown)
+  export symbol(replHlpr_conditional)
+  export symbol(replResult_rpgIndicator)
+  export symbol(replResult_recordCustomMessage)
+endpgmexp

@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "description": "REPL for ILE RPG",
+  "curlib": "REPLBOB",
+  "objlib": "REPLBOB",
+  "repository": "https://github.com/tom-writes-code/rpgle-repl",
+  "setIBMiEnvCmd": [],
+  "includePath": [],
+  "preUsrlibl": [],
+  "postUsrlibl": []
+}

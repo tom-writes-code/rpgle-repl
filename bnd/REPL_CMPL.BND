@@ -1,0 +1,6 @@
+strpgmexp pgmlvl(*current)
+  export symbol(closeReplCmpl)
+  export symbol(compileGeneratedSourceObject)
+  export symbol(prepareUserBoundServicePrograms)
+  export symbol(userBoundServiceProgram)
+endpgmexp

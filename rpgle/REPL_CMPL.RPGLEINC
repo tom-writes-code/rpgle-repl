@@ -1,0 +1,49 @@
+**FREE
+
+/If Defined(REPL_CMPL)
+/Eof
+/Endif
+/Define REPL_CMPL
+
+dcl-c c_generatedSourceLibrary 'QTEMP';
+dcl-c c_generatedSourceFile 'QREPL_SRC';
+dcl-c c_generatedSourceMember 'REPL_SRC';
+dcl-c c_generatedModule 'REPL_MOD';
+dcl-c c_generatedProgram 'REPL_PGM';
+
+dcl-c c_error_module_not_created 'rpl0001';
+dcl-c c_error_program_not_created 'rpl0002';
+
+dcl-ds t_serviceProgram qualified template;
+  library char(10);
+  name char(10);
+end-ds;
+
+// Compile the generated source object.
+// The library, module name, and program names are specified
+//   using c_generatedSourceLibrary, c_generatedModule,
+//   and c_generatedProgram.
+// showModuleInstructions specifies whether to show the
+//   command interface for CRTPGM to allow the user to
+//   change the compilation settings.
+// batchMode allows you to specify that we should never
+//   show the command in prompt mode.
+// userServicePrograms allows the specification of up to
+//   10 additional service programs in the form
+//   library/srvpgm, ie, *LIBL/
+// The module is compiled using CRTSQLRPGI.
+// The function will attempt to determine any service
+//   programs that should be bound based on the /include
+//   and /copy reference source. If the relevant service
+//   program cannot be determined, the command interface
+//   will be shown regardless of the input parameter,
+//   and will include the reference source name in the
+//   list of bound service programs.
+// The program is compiled using CRTPGM.
+// For REPL functionality, REPL_HLPR is always bound in.
+dcl-pr compileGeneratedSourceObject;
+  showModuleInstructions ind const;
+  batchMode ind const options(*omit: *nopass);
+  userServicePrograms
+    likeds(t_serviceProgram) dim(10) const options(*omit: *nopass);
+end-pr;

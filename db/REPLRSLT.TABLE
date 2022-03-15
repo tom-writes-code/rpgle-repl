@@ -1,0 +1,40 @@
+-- Table Definition
+CREATE OR REPLACE TABLE replrslt
+(
+  --Primary Key
+  --CONSTRAINT pk_repl_result
+  --PRIMARY KEY (session_id, line_number, result_number),
+
+  --Columns
+  session_id VARCHAR(28)
+    GENERATED ALWAYS AS (QSYS2.JOB_NAME),
+  line_number FOR COLUMN lineNumber DEC(4,0) NOT NULL,
+  result_number FOR COLUMN resultNum DEC(4,0) NOT NULL,
+  result_description FOR COLUMN resultDes VARCHAR(1000) NOT NULL,
+  loop_count DEC(5,0) NOT NULL DEFAULT 1
+
+)
+--Record Format
+RCDFMT replrsltf;
+
+--Long Name
+RENAME replrslt TO repl_result FOR SYSTEM NAME replrslt;
+
+--Table Label (The see/change object description should also match this)
+LABEL ON TABLE replrslt IS
+  'repl_result';
+
+--Table Comment
+COMMENT ON TABLE replrslt IS
+  'Records statement results from repl';
+
+--Column Text
+LABEL ON COLUMN replrslt
+(
+  session_id TEXT IS 'Session ID',
+  line_number TEXT IS 'Line Number',
+  result_number TEXT IS 'Result Number',
+  result_description TEXT IS 'Result Description',
+  loop_count TEXT IS 'Occurrences of Result'
+);
+

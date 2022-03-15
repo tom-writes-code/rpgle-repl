@@ -1,0 +1,40 @@
+**FREE
+
+/If Defined(REPL_INS)
+/Eof
+/Endif
+/Define REPL_INS
+
+/include repl_pseut
+
+// Add a single line of generated code to the source file
+//   denoted by the REPL_ALIAS alias. This alias is set up
+//   using createSqlAlias.
+// Free or fixed format code can be passed in, and the number
+//   of leading blanks will be adjusted accordingly.
+// This is kept in a separate service program to avoid
+//   circular dependencies. This should not bind in
+//   any other service programs.
+dcl-pr insertSingleLineOfGeneratedCode ;
+  code like(t_lineOfCode.code) const;
+end-pr;
+
+// Given a single line of code, determine if it is fixed format.
+// Code is considered fixed format if the first character
+//   is any of the following:
+//     o F
+//     o I
+//     o O
+//     o D
+//     o C
+dcl-pr codeIsFixedFormat ind;
+  code like(t_lineOfCode.code) const;
+end-pr;
+
+// Create an alias REPL_ALIAS for the c_generatedSourceMember
+//   of c_generatedSourceFile in c_generatedSourceLibrary.
+// This will be used in insertSingleLineOfGeneratedCode.
+dcl-pr createSqlAlias end-pr;
+
+// Drop the alias REPL_ALIAS.
+dcl-pr dropSqlAlias end-pr;

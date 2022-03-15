@@ -1,0 +1,21 @@
+**FREE
+
+/If Defined(REPL_PSEUT)
+/EoF
+/EndIf
+/Define REPL_PSEUT
+
+dcl-ds t_lineOfCode qualified template;
+  line packed(6:0);
+  code char(71);
+end-ds;
+dcl-s t_result varchar(1000) template;
+dcl-s t_longLineOfCode varchar(1000) template;
+
+dcl-ds t_storedSnippet qualified template;
+  owner char(10);
+  sessionId char(28);
+  saveName char(20);
+  lastUpdate timestamp;
+  preview char(100);
+end-ds;

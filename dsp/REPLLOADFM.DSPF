@@ -1,0 +1,70 @@
+                                            DSPSIZ(27 132 *DS4)
+                                            INDARA
+
+                R HEADER
+                                        1  2'repl:load snippets'
+                                            COLOR(BLU)
+
+                                        2  2'1=Load  4=Delete'
+                                            COLOR(WHT)
+
+                  H_MODE        16A  O  2 84
+        50                                  COLOR(WHT)
+       N50                                  COLOR(RED)
+                                        2102'filter by profile:'
+                                            COLOR(WHT)
+                  H_FILTER      10A  B  2122
+                                            COLOR(WHT)
+
+                R SNIPPET                   SFL
+                                            CHGINPDFT(LC)
+                  S_SELECT       1A  B  3  2COLOR(WHT)
+                                            DSPATR(UL)
+        99                                  DSPATR(RI)
+        99                                  DSPATR(PC)
+                  S_ORIGIN      30A  O  3  4COLOR(BLU)
+                  S_LASTCHG     10A  O  3 35COLOR(BLU)
+                  S_PREVIEW     85A  O  3 46COLOR(GRN)
+                  S_OWNER       10A  H
+                  S_SAVENAME    20A  H
+                  S_SESSION     28A  H
+
+                R SNIPPETS                  SFLCTL(SNIPPET)
+                                            SFLSIZ(23)
+                                            SFLPAG(22)
+                                            TEXT('Snippets Control Format')
+                                            CF03(03 'Exit')
+                                            CF11(11 'Saved/Unsaved')
+                                            OVERLAY
+        40                                  SFLDSP
+        41                                  SFLDSPCTL
+        42                                  SFLCLR
+        43                                  SFLEND(*MORE)
+
+                R NORECORDS
+                                            OVERLAY
+                                        4  5'no snippets found for the current -
+                                            search criteria'
+
+                R FKEYS
+                                            FRCDTA
+                                            OVERLAY
+                  MSGLIN       129A  O 27  2DSPATR(HI)
+
+                                       26  2'F3=Exit  F11=Saved/Unsaved Snippet-
+                                            s'
+                                            COLOR(BLU)
+
+                R CONFIRM
+                                            OVERLAY
+                                            WINDOW(6 6 6 54)
+                                            CF10(10 'Confirm')
+                                            CF12(12 'Cancel')
+
+
+                  CNFTXT1       50A  O  2  3COLOR(WHT)
+                  CNFTXT2       50A  O  3  3COLOR(WHT)
+
+                                        5  3'F10=Confirm                       -
+                                                  F12=Cancel'
+                                            COLOR(BLU)

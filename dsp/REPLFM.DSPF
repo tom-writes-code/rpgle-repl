@@ -1,0 +1,235 @@
+                                            DSPSIZ(27 132 *DS4)
+                                            INDARA
+
+                R HEADER
+                                        1  2'repl:sqlrpgle'
+                                            COLOR(BLU)
+
+                                        2  2'line'
+                                        2  7'code'
+                                        2 79'result'
+
+                R CODELINE                  SFL
+                                            CHGINPDFT(LC)
+                  CL_LINENUM     4A  O  3  2
+        30                                  COLOR(BLU)
+       N30                                  COLOR(RED)
+      * 30: valid
+      * 50: is ruler line
+                  CL_CODE       71A  B  3  7
+        30
+      AN50                                  COLOR(WHT)
+       N30
+      AN50                                  COLOR(RED)
+        50                                  COLOR(GRN)
+                  CL_RESULT     52A  O  3 79
+        30                                  COLOR(PNK)
+       N30                                  COLOR(RED)
+                  CL_FULRSLT  1000A  H
+
+                R CODEPAGE                  SFLCTL(CODELINE)
+                                            SFLSIZ(23)
+                                            SFLPAG(22)
+                                            SFLCSRRRN(&CP_RRN)
+                                            TEXT('Code Line Control Format')
+                                            CF01(01 'Expand Result')
+                                            CF02(02 'Debug')
+                                            CF03(03 'Exit')
+                                            CF04(04 'Show Ruler')
+                                            CF05(05 'Clear Sheet')
+                                            CF06(06 'Insert Line')
+                                            CF07(07 'Spool Files')
+                                            CF08(08 'Job Log')
+                                            CF09(09 'Command Line')
+                                            CF10(10 'Compile')
+                                            CF11(11 'Compile and Run')
+                                            CF12(12 'Run')
+                                            CF14(14 'Delete Line')
+                                            CF15(15 'Split Line')
+                                            CF17(17 'Show Source')
+                                            CF21(21 'Save/Load')
+                                            CF22(22 '?Compile')
+                                            CF23(23 '?Compile and Run')
+                                            CF24(24 'More Options')
+                                            RTNCSRLOC(&CP_RECFMT &CP_FLD &CP_CO-
+                                            LUMN)
+                                            CSRLOC(CP_SETROW CP_SETCOL)
+                                            OVERLAY
+        40                                  SFLDSP
+        41                                  SFLDSPCTL
+        42                                  SFLCLR
+        43                                  SFLEND(*MORE)
+      * used to set a row which should be shown on screen
+                  CP_POS         4S 0H      SFLRCDNBR(CURSOR)
+
+      * used to return the row number that the cursor was left in
+                  CP_RRN         5S 0H
+      * used to return the position the cursor was in on screen
+                  CP_RECFMT     10A  H
+                  CP_FLD        10A  H
+                  CP_COLUMN      4S 0H
+      * used to set a cursor position on screen
+                  CP_SETROW      3S 0H
+                  CP_SETCOL      3S 0H
+
+                R FKEYS
+                                            FRCDTA
+                                            OVERLAY
+                  MSGLIN       129A  O 27  2DSPATR(HI)
+
+                                       26  2'F3=Exit'
+                                            COLOR(BLU)
+                                       26115'F24=More Options'
+                                            COLOR(BLU)
+
+        32                             26 11'F2=Debug'
+                                            COLOR(BLU)
+        32                             26 21'F4=Show Ruler'
+                                            COLOR(BLU)
+        32                             26 36'F5=Clear Sheet'
+                                            COLOR(BLU)
+        32                             26 52'F10(F22)=(?)Compile'
+                                            COLOR(BLU)
+        32                             26 73'F11(F23)=(?)Compile & Run'
+                                            COLOR(BLU)
+        32                             26100'F12=Run'
+                                            COLOR(BLU)
+
+        33                             26 11'F7=Spool Files'
+                                            COLOR(BLU)
+        33                             26 27'F8=Job Log'
+                                            COLOR(BLU)
+        33                             26 39'F9=Command Line'
+                                            COLOR(BLU)
+        33                             26 56'F17=Show Source'
+                                            COLOR(BLU)
+
+        34                             26 11'F1=Expand Result'
+                                            COLOR(BLU)
+        34                             26 29'F6=Insert Line'
+                                            COLOR(BLU)
+        34                             26 45'F14=Delete Line'
+                                            COLOR(BLU)
+        34                             26 62'F15=Split Line'
+                                            COLOR(BLU)
+        34                             26 78'F21=Save/Load Snippet'
+                                            COLOR(BLU)
+
+                R FULLRESULT
+                                            OVERLAY
+                                            WINDOW(6 6 12 103)
+                  FR_RESULT   1000A  B  2  3COLOR(PNK)
+                                            CNTFLD(100)
+                                            DSPATR(PR)
+
+                R PICKRULER
+                                            OVERLAY
+                                            WINDOW(6 6 11 81)
+
+                                        2  3'Choose Ruler Specification:'
+                                            COLOR(BLU)
+                  PR_RULER       1A  B  2 31COLOR(WHT)
+                                            CHECK(ER)
+                                            DSPATR(UL)
+                                            DSPATR(PC)
+
+                                        4  3'H'
+                                            COLOR(BLU)
+                                        4  5'HKeywords+++++++++++++++++++++++++-
+                                            +++++++++++++++++++++++++++++++++++-
+                                            ++++++'
+                                            COLOR(GRN)
+                                        5  3'F'
+                                            COLOR(BLU)
+                                        5  5'FFilename++IPEASFRlen+LKlen+AIDevi-
+                                            ce+.Keywords+++++++++++++++++++++++-
+                                            ++++++'
+                                            COLOR(GRN)
+                                        6  3'D'
+                                            COLOR(BLU)
+                                        6  5'DName+++++++++++ETDsFrom+++To/L+++-
+                                            IDc.Keywords+++++++++++++++++++++++-
+                                            ++++++'
+                                            COLOR(GRN)
+                                        7  3'I'
+                                            COLOR(BLU)
+                                        7  5'IRcdname+++....Ri.................-
+                                            ...................................-
+                                            ......'
+                                            COLOR(GRN)
+                                        8  3'C'
+                                            COLOR(BLU)
+                                        8  5'CL0N01Factor1+++++++Opcode(E)+Fact-
+                                            or2+++++++Result++++++++Len++D+HiLo-
+                                            Eq....'
+                                            COLOR(GRN)
+                                        9  3'O'
+                                            COLOR(BLU)
+                                        9  5'O..............N01N02N03Field+++++-
+                                            ++++.B.............................-
+                                            ......'
+                                            COLOR(GRN)
+                                       10  3'P'
+                                            COLOR(BLU)
+                                       10  5'PName+++++++++++..B...............-
+                                            ....Keywords+++++++++++++++++++++++-
+                                            ++++++'
+                                            COLOR(GRN)
+
+
+                R SAVELOAD
+                                            OVERLAY
+                                            WINDOW(6 6 7 34)
+                                            CF06(06 'Save Snippet')
+                                            CF10(10 'Load Snippet')
+                                            CF12(12 'Cancel')
+
+                                        1  3'Save/Load Snippets'
+                                            COLOR(BLU)
+
+                                        3  3'F6  = Save Snippet'
+                                            COLOR(WHT)
+                                        4  3'F10 = Load Snippet'
+                                            COLOR(WHT)
+
+                                        6 24'F12=Cancel'
+                                            COLOR(BLU)
+
+                R SAVE
+                                            CHGINPDFT(LC)
+                                            OVERLAY
+                                            WINDOW(6 6 7 34)
+                                            CF10(10 'Confirm')
+                                            CF12(12 'Cancel')
+
+                                        1  3'Save Snippet'
+                                            COLOR(BLU)
+
+                                        3  3'Name . .'
+                                            COLOR(WHT)
+                  S_SAVENAME    20A  B  3 13
+                                            COLOR(WHT)
+                                            DSPATR(UL)
+        99                                  DSPATR(RI)
+
+        99                              5  3'Name already in use. Overwrite?'
+                                            COLOR(WHT)
+        99                              6  3'F10=Confirm'
+                                            COLOR(BLU)
+                                        6 24'F12=Cancel'
+                                            COLOR(BLU)
+
+                R CONFIRM
+                                            OVERLAY
+                                            WINDOW(6 6 6 54)
+                                            CF10(10 'Confirm')
+                                            CF12(12 'Cancel')
+
+
+                  CNFTXT1       50A  O  2  3COLOR(WHT)
+                  CNFTXT2       50A  O  3  3COLOR(WHT)
+
+                                        5  3'F10=Confirm                       -
+                                                  F12=Cancel'
+                                            COLOR(BLU)
+

@@ -1,0 +1,49 @@
+**FREE
+
+/If Defined(REPL_HLPR)
+/Eof
+/Endif
+/Define REPL_HLPR
+
+/if defined(STMF_COMPILE)
+/include repl_pseut
+/else
+/include qrpgleref,repl_pseut
+/endif
+
+// Record the sqlstate and sqlcode after evaluting
+//   an SQL statement
+dcl-pr replHlpr_recordSqlResult;
+  line like(t_lineOfCode.line) const;
+  sqlstate varchar(5) const;
+  sqlCode packed(10) const;
+end-pr;
+
+// Record that a loop has completed. The loop_count
+//   will be automatically incremented on each call.
+dcl-pr replHlpr_loop;
+  repl_line like(t_lineOfCode.line) const;
+end-pr;
+
+// Record that a variable could not be evaluated
+//   (unknown type).
+dcl-pr replHlpr_unknown;
+  repl_line like(t_lineOfCode.line) const;
+end-pr;
+
+// Record that a conditional statement was evaluated true.
+dcl-pr replHlpr_conditional;
+  repl_line like(t_lineOfCode.line) const;
+end-pr;
+
+// Record the value of an RPG indicator (*inXX)
+dcl-pr replResult_rpgIndicator;
+  repl_line like(t_lineOfCode.line) const;
+  repl_name char(70) const;
+  repl_i ind const;
+end-pr;
+
+// Record a custom string
+dcl-pr replResult_recordCustomMessage;
+  customMessage varchar(132) const;
+end-pr;

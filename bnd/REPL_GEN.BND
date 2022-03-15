@@ -1,0 +1,4 @@
+strpgmexp pgmlvl(*current)
+  export symbol(createGeneratedSourceObject)
+  export symbol(refreshGeneratedSourceObject)
+endpgmexp

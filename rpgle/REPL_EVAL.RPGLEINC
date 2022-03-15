@@ -1,0 +1,114 @@
+**FREE
+
+/If Defined(REPL_EVAL)
+/Eof
+/Endif
+/Define REPL_EVAL
+
+/include repl_pseu
+/include repl_vars
+
+// if, else, elseif, when, other
+dcl-c c_conditionalStatement 'CON';
+// a = b
+dcl-c c_setValueStatement 'VAL';
+// dow, dou, for
+dcl-c c_loopStatement 'LOP';
+// exec sql
+dcl-c c_sqlStatement 'SQL';
+
+dcl-s t_triggerType char(3) template;
+
+dcl-ds t_referenceSource qualified template;
+  library char(10);
+  file char(10);
+  member char(10);
+end-ds;
+
+// Given the line number of code just posted, and the meta-data
+//   of what it was, insert the relevant evaluation code.
+// Required meta-data required:
+//   o Trigger type:
+//     o c_conditionalStatement
+//     o c_setValueStatement
+//     o c_loopStatement
+//     o c_sqlStatement
+//   o Variable name (not include array element)
+//   o Current Scope
+// Conditional, Loop, SQL, and Set Value statements
+//   where the variable is of an unknown type can be
+//   evaluated using the existing REPL_HLPR procedures.
+// Set Value statements will call evaluation procedures
+//   which will be dynamically created later in the process.
+dcl-pr evaluateLineOfPseudoCode;
+  line like(t_lineOfCode.line) const;
+  triggerType like(t_triggerType) const;
+  variableName like(t_variable.name) const;
+  scope like(t_variable.scope) const;
+end-pr;
+
+// Given a complete line of code, determine whether it is a
+//   valid free format line, and return the type.
+// A line is considered free format if is starts with the
+//   following strings (separated by trigger type)
+//   o c_conditionalStatement
+//     o 'IF '
+//     o 'ELSE '
+//     o 'ELSE;'
+//     o 'ELSEIF '
+//     o 'WHEN '
+//     o 'OTHER '
+//     o 'OTHER;'
+//     o 'ON-ERROR;'
+//   o c_sqlStatement
+//     o 'EXEC SQL'
+//   o c_loopStatement
+//     o 'DOW '
+//     o 'DOU '
+//     o 'FOR '
+// A line is also considered free format if it contains
+//   the following symbols anywhere in the string.
+//   o c_setValueStatement
+//     o '='
+// This function is not case sensitive.
+dcl-pr freeFormatEvaluationFound ind;
+  code like(t_longLineOfCode) const;
+  triggerType like(t_triggerType);
+end-pr;
+
+// Given a complete line of free format code, is the closing
+//   character a semi-colon?
+dcl-pr endOfFreeFormatLineFound ind;
+  code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a single line of code, do the opening characters imply that
+//   this is a comment line.
+// The following characters imply comment lines:
+//   o *
+//   o //
+//   o --
+//   o /*
+dcl-pr codeIsComment ind;
+  code like(t_lineOfCode.code) const;
+end-pr;
+
+// Add the result evaluation helpers. This will read through each
+//   of the variables in the pseudo code, and create a procedure
+//   in the generated code of the form:
+//     o replResult_MYVARIABLE_single
+//     o replResult_MYVARIABLE_multiple
+// Single or Multiple will depend on whether the evaluated object
+//   is an array or not.
+// For data structures, the generated procedure will call the
+//   underlying standalone variable procedures.
+// For standalone variables, the result will be added to the
+//   REPL_RESULT table.
+// All variables will have a helper procedure created, regardless
+//   of whether or not the variable is evaluated within the program.
+dcl-pr replresultEvaluationHelpers end-pr;
+
+// Separate a /copy or /include statement into the component parts
+dcl-pr separateReferenceSource likeds(t_referenceSource);
+  code like(t_lineOfCode.code) value;
+end-pr;

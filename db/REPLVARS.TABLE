@@ -1,0 +1,54 @@
+-- Table Definition
+CREATE OR REPLACE TABLE replvars
+(
+  --Primary Key
+  --CONSTRAINT pk_repl_variables
+  --PRIMARY KEY (session_id, variable_name, scope),
+
+  --Columns
+  session_id VARCHAR(28) GENERATED ALWAYS AS (QSYS2.JOB_NAME),
+  variable_name FOR COLUMN varname VARCHAR(70) NOT NULL,
+  variable_scope FOR COLUMN varscope VARCHAR(70) NOT NULL DEFAULT 'MAIN',
+  defined CHAR(1) NOT NULL DEFAULT 'N',
+  is_template FOR COLUMN istemplate CHAR(1),
+  variable_type FOR COLUMN vartype VARCHAR(10),
+  definition VARCHAR(50),
+  parent_data_structure FOR COLUMN parent_ds VARCHAR(70),
+  is_qualified FOR COLUMN qualified CHAR(1),
+  array_size DEC(10,0),
+  declaration_order FOR COLUMN declareord DEC(5,0) DEFAULT 1,
+  variable_id FOR COLUMN variableid BIGINT
+    NOT NULL GENERATED ALWAYS AS IDENTITY,
+  is_used FOR COLUMN isused CHAR(1) DEFAULT 'N'
+
+)
+--Record Format
+RCDFMT replvarsf;
+
+--Long Name
+RENAME replvars TO repl_variables FOR SYSTEM NAME replvars;
+
+--Table Label (The see/change object description should also match this)
+LABEL ON TABLE replvars IS
+  'repl_variables';
+
+--Table Comment
+COMMENT ON TABLE replvars IS
+  'Stores details about the variables declared in the source code';
+
+--Column Text
+LABEL ON COLUMN replvars
+(
+  session_id TEXT IS 'Session ID',
+  variable_name TEXT IS 'Variable Name',
+  variable_scope TEXT IS 'Scope',
+  defined TEXT IS 'Defined',
+  is_template TEXT IS 'Template',
+  variable_type TEXT IS 'Variable Type',
+  definition TEXT IS 'Definition',
+  parent_data_structure TEXT IS 'Parent Data Structure',
+  is_qualified TEXT IS 'Qualified Data Structure',
+  array_size TEXT IS 'Array Size',
+  declaration_order TEXT IS 'Declaration Order'
+);
+
