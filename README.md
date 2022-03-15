@@ -1,6 +1,5 @@
 This project contains a REPL tool for the RPG language on IBM i. A REPL (Read-Evaluate-Print-Loop) program allows you to code small snippets and get immediate feedback on their execution.
 
-[TOC]
 
 ## Building
 
