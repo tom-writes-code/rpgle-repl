@@ -14,9 +14,7 @@ dcl-proc dataStructureStartFound export;
 
   // Ignore anything likerec or likeds.
   return
-    %scan('DCL-DS': %trim(toUpperCase(code))) = 1
-    and %scan('LIKEDS(': toUpperCase(code)) = 0
-    and %scan('LIKEREC(': toUpperCase(code)) = 0;
+    %scan('DCL-DS': %trim(toUpperCase(code))) = 1;
 
 end-proc;
 

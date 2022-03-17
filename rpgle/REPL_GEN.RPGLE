@@ -226,6 +226,29 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
         parentDataStructure(dsNestingLimit)
       );
 
+    // > dcl-ds someDs likeds(t_someOtherDs);
+    elseif %scan('LIKEDS': toUpperCase(continuousLineOfCode)) <> 0
+    and dataStructureStartFound(continuousLineOfCode);
+      dsNestingLimit += 1;
+      storeDataStructureDefinition(
+        continuousLineOfCode:
+        currentScope:
+        parentDataStructure(dsNestingLimit - 1)
+      );
+      dsNestingLimit -= 1;
+
+    //   dcl-ds someDs qualified;
+    // >   someVar char(1);
+    //   end-ds;
+    elseif dsNestingLimit > 1
+    and not dataStructureEndFound(continuousLineOfCode);
+      
+      storeVariableDefinition(
+        continuousLineOfCode:
+        parentDataStructure(dsNestingLimit):
+        currentScope
+      );
+
     endif;
 
     // check for dcl-proc
