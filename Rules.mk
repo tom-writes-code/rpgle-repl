@@ -22,7 +22,7 @@ package:
 	launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true; \
 	$(POSTCLEANUP)
 	$(call echo_cmd,"=== PACKAGE: Saving objects to [$(OBJLIB)/RPGLEREPL]")
-	$(eval crtcmd := SAVOBJ OBJ(*ALL) LIB($(OBJLIB)) DEV(*SAVF) SAVF($(OBJLIB)/RPGLEREPL) CLEAR(*REPLACE) TGTRLS($(TGTRLS)) DTACPR(*YES) SELECT((*OMIT *ALL *FILE SAVF)))
+	$(eval crtcmd := SAVOBJ OBJ(*ALL) LIB($(OBJLIB)) DEV(*SAVF) SAVF($(OBJLIB)/RPGLEREPL) CLEAR(*REPLACE) TGTRLS($(TGTRLS)) DTACPR(*YES) SELECT((*OMIT *ALL *FILE SAVF) (*OMIT *ALL *MODULE) (*OMIT EVFEVENT *FILE)))
 	@$(PRESETUP);  \
 	launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true; \
 	$(POSTCLEANUP)
