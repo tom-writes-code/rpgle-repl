@@ -1,7 +1,7 @@
 **FREE
 
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
-        fixnbr(*zoned : *inputpacked);
+        fixnbr(*zoned : *inputpacked) main(main);
 
 //-----------------------------------------------------------------------
 
@@ -96,6 +96,7 @@ dcl-c c_setInitialColumn 7;
 dcl-c c_showFirstRow 1;
 
 dcl-ds ps psds qualified;
+  programLibrary char(10) pos(81);
   currentUser char(10) pos(358);
 end-ds;
 
@@ -130,21 +131,32 @@ ywords+++++++++++++++++++++++++++++';
 
 //-----------------------------------------------------------------------
 
-savedCursorPosition = resetCursorPosition();
-showRuler = resetShowRuler();
+dcl-proc main;
+  dcl-s addedProductLibrary ind;
 
-dow not dspinds.exit;
+  callp(e) runCommand('ADDLIBLE &1' : ps.programLibrary);
+  addedProductLibrary = not %error();
 
-  displaySourceCode();
-  saveSourceCode();
-  processOption();
+  savedCursorPosition = resetCursorPosition();
+  showRuler = resetShowRuler();
 
-enddo;
+  dow not dspinds.exit;
 
-dropSqlAlias();
+    displaySourceCode();
+    saveSourceCode();
+    processOption();
 
-*inlr = *on;
-return;
+  enddo;
+
+  dropSqlAlias();
+
+on-exit;
+  if addedProductLibrary;
+    callp(e) runCommand('RMVLIBLE &1' : ps.programLibrary);
+  endif;
+
+  close replfm;
+end-proc;
 
 //-----------------------------------------------------------------------
 
