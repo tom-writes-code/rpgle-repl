@@ -6,6 +6,11 @@ Some of my most frequently asked questions are "how do these %BIFs (built in fun
 
 rpgle-repl streamlines this process - not only automatically compiling snippets of code, but also dynamically recording changed variables and displaying the results on screen.
 
+Check out this basic example:
+![Short GIF of REPL evaluating various values](/readme-media/repl-in-action.gif)
+
+Thanks for visiting!
+
 ![Example of REPL showing results detailing the repo details](/readme-media/rpgle-repl-details.png)
 
 Find out more about installing and using rpgle-repl in the [wiki](https://github.com/tom-writes-code/rpgle-repl/wiki).
