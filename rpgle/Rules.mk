@@ -24,9 +24,8 @@ REPL_VARS.MODULE: $(d)/REPL_VARS.SQLRPGLE
 QRPGLEREF.FILE:
 	$(call echo_cmd,"=== Creating source PF [$(notdir $@)]")
 	$(eval crtcmd := CRTSRCPF FILE($(OBJLIB)/$(basename $(@F))) RCDLEN(112) CCSID(37) )
-	@$(PRESETUP);  \
-	launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true; \
-	$(POSTCLEANUP)
+	@$(PRESETUP) \
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true
 
 # TODO: Generalise this into a generic recipe
 QRPGLEREF.FILE/REPL_HLPR.MBR: $(d)/REPL_HLPR.RPGLEINC | QRPGLEREF.FILE
@@ -34,18 +33,16 @@ QRPGLEREF.FILE/REPL_HLPR.MBR: $(d)/REPL_HLPR.RPGLEINC | QRPGLEREF.FILE
 	$(eval libpath = $(OBJPATH_$d))
 	$(call echo_cmd,"=== Creating ref member [$(notdir $@)]")
 	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('$(libpath)/$@') MBROPT(*REPLACE) )
-	@$(PRESETUP);  \
-	launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true; \
-	$(POSTCLEANUP)
+	@$(PRESETUP) \
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true
 
 QRPGLEREF.FILE/REPL_PSEUT.MBR: $(d)/REPL_PSEUT.RPGLEINC | QRPGLEREF.FILE
 	$(eval d = $($@_d))
 	$(eval libpath = $(OBJPATH_$d))
 	$(call echo_cmd,"=== Creating ref member [$(notdir $@)]")
 	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('$(libpath)/$@') MBROPT(*REPLACE) )
-	@$(PRESETUP);  \
-	launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true; \
-	$(POSTCLEANUP)
+	@$(PRESETUP) \
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true
 
 
 refs: $(REFs)
