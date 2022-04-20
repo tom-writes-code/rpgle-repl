@@ -180,6 +180,6 @@ dcl-pr markVariableAsUsed;
   variableId like(t_variable.id) const;
 end-pr;
 
-dcl-pr toUpperCase varchar(512);
+dcl-pr toUpperCase varchar(512) rtnparm;
   lowerString varchar(512) const;
 end-pr;
