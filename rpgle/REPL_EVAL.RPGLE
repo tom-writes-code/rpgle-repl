@@ -350,9 +350,9 @@ dcl-proc replResult_evaluate_fld_single export;
   insertSingleLineOfGeneratedCode
     ('      (SELECT :repl_line,');
   insertSingleLineOfGeneratedCode
-    ('              COALESCE(MAX(result_number),0)+1,');
+    ('              COALESCE(MAX(result_number), 0)+1,');
   insertSingleLineOfGeneratedCode
-    ('              TRIM(:repl_name) || '' = '' ||');
+    ('              TRIM(:repl_name) CONCAT '' = '' CONCAT');
 
   if variable.type = 'indicator' or variable.type = '*indicator';
     insertSingleLineOfGeneratedCode
@@ -367,8 +367,7 @@ dcl-proc replResult_evaluate_fld_single export;
   else;
     insertSingleLineOfGeneratedCode
       ('              '''''''''
-        + '|| TRIM(CAST(:repl_i AS CHAR(1000))) '
-        + '|| ''''''''');
+        + 'CONCAT TRIM(CAST(:repl_i AS CHAR(1000))) ' + 'CONCAT ''''''''');
   endif;
 
   insertSingleLineOfGeneratedCode
