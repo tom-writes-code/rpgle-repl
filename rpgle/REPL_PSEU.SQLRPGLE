@@ -28,8 +28,6 @@ dcl-proc clearSessionPseudoCode export;
 
     clearSessionPseudoVariables();
 
-    clearSessionBuildVariables();
-
     clearSessionPseudoResults();
 
   else;
@@ -39,8 +37,6 @@ dcl-proc clearSessionPseudoCode export;
        WHERE session_id = :sessionId;
 
     clearSessionPseudoVariables(sessionId);
-
-    clearSessionBuildVariables(sessionId);
 
     clearSessionPseudoResults(sessionId);
 
@@ -77,20 +73,6 @@ dcl-proc clearSessionBuildVariables export;
   dcl-pi *n;
     sessionId char(28) const options(*nopass);
   end-pi;
-
-  if %parms < %parmnum(sessionId);
-
-    exec sql
-      DELETE FROM replrefbld
-       WHERE session_id = (QSYS2.JOB_NAME);
-
-  else;
-
-    exec sql
-      DELETE FROM replrefbld
-       WHERE session_id = :sessionId;
-
-  endif;
 
 end-proc;
 
@@ -139,28 +121,6 @@ dcl-proc prepareFetchLinesOfPseudoCode export;
       CLOSE replReference_linesofcode;
 
     if %parms() < %parmnum(startingLine);
-
-      exec sql
-        SELECT 1 INTO :alreadyProcessed
-          FROM replrefbld
-         WHERE session_id = (QSYS2.JOB_NAME)
-           AND library = :sourceFile.library
-           AND file = :sourceFile.file
-           AND member = :sourceFile.member
-         LIMIT 1;
-
-      if alreadyProcessed;
-        return;
-      endif;
-
-      exec sql
-        INSERT INTO replrefbld
-          (session_id, library, file, member)
-        VALUES
-          (QSYS2.JOB_NAME,
-           :sourceFile.library,
-           :sourceFile.file,
-           :sourceFile.member);
 
       from = 0;
 
