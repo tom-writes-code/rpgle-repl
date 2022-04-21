@@ -39,6 +39,7 @@ dcl-ds dspinds qualified;
   run ind pos(12);
   deleteLine ind pos(14);
   splitLine ind pos(15);
+  changeControlStatement ind pos(16);
   showGeneratedSource ind pos(17);
 
   saveLoadSnippet ind pos(21);
@@ -63,6 +64,11 @@ dcl-ds dspinds qualified;
   save_confirm ind pos(10);
   save_cancel ind pos(12);
   save_saveFileAlreadyExists ind pos(99);
+
+  // for the control statement window
+  control_statement_reset ind pos(5);
+  control_statement_save ind pos(10);
+  control_statement_cancel ind pos(12);
 
   validCodeLine ind pos(30);
 
@@ -139,6 +145,7 @@ dcl-proc main;
 
   savedCursorPosition = resetCursorPosition();
   showRuler = resetShowRuler();
+  resetControlStatement();
 
   dow not dspinds.exit;
 
@@ -671,6 +678,10 @@ dcl-proc processOption;
       savedCursorPosition.row += 1;
       savedCursorPosition.showingRow += 1;
 
+    // f16
+    when dspinds.changeControlStatement;
+      editControlStatement();
+
     // f17
     when dspinds.showGeneratedSource;
       monitor;
@@ -775,6 +786,36 @@ on-exit;
   dspinds.save_confirm = *off;
   dspinds.save_cancel = *off;
   dspinds.save_saveFileAlreadyExists = *off;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc editControlStatement;
+  
+  dow not dspinds.control_statement_save 
+  and not dspinds.control_statement_cancel;
+
+    if dspinds.control_statement_reset;
+      resetControlStatement();
+      dspinds.control_statement_reset = *off;
+    endif; 
+
+    exfmt control;
+  enddo;
+
+  dspinds.control_statement_save = *off;
+  dspinds.control_statement_cancel = *off;  
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc resetControlStatement;
+
+  s_control = 
+    'ctl-opt datedit(*ymd) option(*nodebugio : *nosrcstmt)                  '
+  + 'fixnbr(*zoned : *inputpacked);';
 
 end-proc;
 
