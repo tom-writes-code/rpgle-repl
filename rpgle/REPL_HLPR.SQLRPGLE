@@ -27,7 +27,7 @@ dcl-proc replHlpr_recordSqlResult export;
   exec sql
     INSERT INTO replrslt
       (line_number, result_number, result_description)
-      (SELECT :line, COALESCE(MAX(result_number),0)+1,
+      (SELECT :line, COALESCE(MAX(result_number), 0)+1,
               :resultDescription
          FROM replrslt
         WHERE session_id = QSYS2.JOB_NAME
@@ -113,8 +113,8 @@ dcl-proc replResult_rpgIndicator export;
     INSERT INTO replrslt
       (line_number, result_number, result_description)
       (SELECT :repl_line,
-              COALESCE(MAX(result_number),0)+1,
-              TRIM(:repl_name) || ' = ' ||
+              COALESCE(MAX(result_number), 0)+1,
+              TRIM(:repl_name) CONCAT ' = ' CONCAT
               CASE WHEN :repl_i = 1
                 THEN 'true'
                 ELSE 'false' END
