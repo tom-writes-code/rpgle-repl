@@ -1367,11 +1367,11 @@ end-proc;
 //-----------------------------------------------------------------------
 
 dcl-proc toUpperCase export;
-  dcl-pi *n varchar(512) rtnparm;
+  dcl-pi *n varchar(512);
     lowerString varchar(512) const;
   end-pi;
   dcl-s upperString varchar(512);
-  exec sql SET :upperString = UPPER(:lowerString);
+  exec sql SET :upperString = UPPER(RTRIM(:lowerString));
   return upperString;
 end-proc;
 
