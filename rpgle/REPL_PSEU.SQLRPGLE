@@ -206,7 +206,7 @@ dcl-proc storeLineOfPseudoCode export;
     INSERT INTO replsrc
       (owner, session_id, line_number, code, last_update)
     VALUES
-      (CURRENT USER,
+      (SESSION USER,
        (QSYS2.JOB_NAME),
        :lineOfCode.line,
        :lineOfCode.code,
@@ -457,13 +457,13 @@ dcl-proc storeSessionToSaveFile export;
 
   exec sql
     DELETE FROM replsrc
-     WHERE owner = CURRENT USER
+     WHERE owner = SESSION USER
            AND save_name = :saveFile;
 
   exec sql
     INSERT INTO replsrc
       (line_number, code, save_name, last_update, owner)
-    SELECT line_number, code, :saveFile, CURRENT TIMESTAMP, CURRENT USER
+    SELECT line_number, code, :saveFile, CURRENT TIMESTAMP, SESSION USER
       FROM replsrc
      WHERE session_id = (QSYS2.JOB_NAME);
 
@@ -483,7 +483,7 @@ dcl-proc restoreSaveFileToSession export;
     INSERT INTO replsrc
       (line_number, code, session_id, last_update, owner)
     SELECT line_number, code, (QSYS2.JOB_NAME),
-           CURRENT TIMESTAMP, CURRENT USER
+           CURRENT TIMESTAMP, SESSION USER
       FROM replsrc
      WHERE owner = :owner
            AND save_name = :saveFile;
@@ -511,7 +511,7 @@ dcl-proc restoreSessionToSession export;
     INSERT INTO replsrc
       (line_number, code, session_id, last_update, owner)
     SELECT line_number, code, (QSYS2.JOB_NAME),
-           CURRENT TIMESTAMP, CURRENT USER
+           CURRENT TIMESTAMP, SESSION USER
       FROM replsrc
      WHERE session_id = :sessionId;
 
