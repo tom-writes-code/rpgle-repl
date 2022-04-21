@@ -1367,7 +1367,7 @@ end-proc;
 //-----------------------------------------------------------------------
 
 dcl-proc toUpperCase export;
-  dcl-pi *n varchar(512);
+  dcl-pi *n varchar(512) rtnparm;
     lowerString varchar(512) const;
   end-pi;
   dcl-s upperString varchar(512);
