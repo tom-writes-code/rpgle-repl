@@ -481,12 +481,33 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
+dcl-proc saveControlOptions;
+
+  dcl-ds lineOfCode likeds(t_lineOfCode);
+  dcl-s i like(t_lineOfCode.line);
+
+  clearSessionPseudoCode(c_control_options);
+  lineOfCode.line = *zeros;
+
+  for i = 1 to 3;
+
+    lineOfCode.line = i;
+    lineOfCode.code = %subst(S_CONTROL: (71*(i-1) + 1): 71);
+
+    storeLineOfPseudoCode(lineofCode: c_control_options);
+
+  endfor;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
 dcl-proc saveSourceCode;
 
   dcl-ds lineOfCode likeds(t_lineOfCode);
   dcl-s i like(t_lineOfCode.line);
 
-  clearSessionPseudoCode();
+  clearSessionPseudoCode(c_mainline_code);
   lineOfCode.line = *zeros;
 
   i = 1;
@@ -501,7 +522,7 @@ dcl-proc saveSourceCode;
       lineOfCode.line = %dec(cl_lineNum: 6: 0);
       lineOfCode.code = cl_code;
 
-      storeLineOfPseudoCode(lineOfCode);
+      storeLineOfPseudoCode(lineOfCode: c_mainline_code);
 
     endif;
 
@@ -559,7 +580,7 @@ dcl-proc processOption;
         'snippet? This action cannot be undone.';
       exfmt confirm;
       if dspinds.confirm_confirm;
-        clearSessionPseudoCode();
+        clearSessionPseudoCode(c_mainline_code);
         savedCursorPosition = resetCursorPosition();
       endif;
       dspinds.confirm_confirm = *off;
