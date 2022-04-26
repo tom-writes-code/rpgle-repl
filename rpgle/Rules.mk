@@ -25,24 +25,20 @@ QRPGLEREF.FILE:
 	$(call echo_cmd,"=== Creating source PF [$(notdir $@)]")
 	$(eval crtcmd := CRTSRCPF FILE($(OBJLIB)/$(basename $(@F))) RCDLEN(112) CCSID(37) )
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
 
 # TODO: Generalise this into a generic recipe
 QRPGLEREF.FILE/REPL_HLPR.MBR: $(d)/REPL_HLPR.RPGLEINC | QRPGLEREF.FILE
-	$(eval d = $($@_d))
-	$(eval libpath = $(OBJPATH_$d))
 	$(call echo_cmd,"=== Creating ref member [$(notdir $@)]")
-	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('$(libpath)/$@') MBROPT(*REPLACE) )
+	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('/QSYS.LIB/$(OBJLIB).LIB/$@') MBROPT(*REPLACE) )
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
 
 QRPGLEREF.FILE/REPL_PSEUT.MBR: $(d)/REPL_PSEUT.RPGLEINC | QRPGLEREF.FILE
-	$(eval d = $($@_d))
-	$(eval libpath = $(OBJPATH_$d))
 	$(call echo_cmd,"=== Creating ref member [$(notdir $@)]")
-	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('$(libpath)/$@') MBROPT(*REPLACE) )
+	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('/QSYS.LIB/$(OBJLIB).LIB/$@') MBROPT(*REPLACE) )
 	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 || true
+	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
 
 
 refs: $(REFs)
