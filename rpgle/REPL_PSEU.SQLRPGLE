@@ -203,8 +203,8 @@ end-proc;
 
 dcl-proc storeLineOfPseudoCode export;
   dcl-pi *n;
-    lineOfCode likeds(t_lineOfCode) const;
     sourceType like(t_sourceType) const;
+    lineOfCode likeds(t_lineOfCode) const;
   end-pi;
 
   exec sql
@@ -237,7 +237,7 @@ dcl-proc insertNewLineOfPseudoCode export;
            AND line_number >= :line + 1;
 
   lineOfCode.line = line + 1;
-  storeLineOfPseudoCode(lineOfCode: c_mainline_code);
+  storeLineOfPseudoCode(c_mainline_code: lineOfCode);
 
 end-proc;
 
@@ -285,7 +285,7 @@ dcl-proc splitLineOfPseudoCode export;
 
   // Insert our new line
   rightLineOfCode.line = line + 1;
-  storeLineOfPseudoCode(rightLineOfCode: c_mainline_code);
+  storeLineOfPseudoCode(c_mainline_code: rightLineOfCode);
 
 end-proc;
 
@@ -497,7 +497,7 @@ dcl-proc restoreSaveFileToSession export;
     saveFile char(20) const;
   end-pi;
 
-  clearSessionPseudoCode(c_control_options);
+  clearSessionPseudoCode(c_control_statement);
   clearSessionPseudoCode(c_mainline_code);
 
   exec sql
@@ -526,7 +526,7 @@ dcl-proc restoreSessionToSession export;
     return;
   endif;
 
-  clearSessionPseudoCode(c_control_options);
+  clearSessionPseudoCode(c_control_statement);
   clearSessionPseudoCode(c_mainline_code);
 
   exec sql
@@ -577,3 +577,192 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
+dcl-proc fetchOrganisationControlStatementDefault export;
+  dcl-pi *n likeds(t_controlStatement) end-pi;
+
+  dcl-ds controlStatement likeds(t_controlStatement);
+  dcl-s statement like(t_controlStatement.statement);
+  dcl-s resultCount packed(1);
+
+  exec sql 
+    DECLARE organisationControlStatement CURSOR FOR
+      SELECT code
+      FROM replsrc
+      WHERE session_id IS NULL
+            AND save_name IS NULL
+            AND owner IS NULL
+            AND source_type = :c_control_statement
+      ORDER BY line_number;
+  exec sql
+    OPEN organisationControlStatement;
+  exec sql
+    FETCH organisationControlStatement INTO :statement;
+
+  resultCount = 0;
+
+  dow resultCount < 3 and sqlstt = '00000';
+    resultCount += 1;
+    controlStatement.statement(resultCount) = statement;
+    exec sql
+      FETCH organisationControlStatement INTO :statement;
+  enddo;
+
+  if resultCount = 0;
+    reset controlStatement;
+    controlStatement.statement(1) = 'ctl-opt;';
+  endif;
+
+  return controlStatement;
+
+on-exit;
+  exec sql
+    CLOSE organisationControlStatement;
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc fetchUserControlStatementDefault export;
+  dcl-pi *n likeds(t_controlStatement) end-pi;
+
+  dcl-ds controlStatement likeds(t_controlStatement);
+  dcl-s statement like(t_controlStatement.statement);
+  dcl-s resultCount packed(1);
+
+  exec sql 
+    DECLARE userControlStatement CURSOR FOR
+      SELECT code
+      FROM replsrc
+      WHERE session_id IS NULL
+            AND save_name IS NULL
+            AND owner = SESSION_USER
+            AND source_type = :c_control_statement
+      ORDER BY line_number    ;
+  exec sql
+    OPEN userControlStatement;
+  exec sql
+    FETCH userControlStatement INTO :statement;
+
+  resultCount = 0;
+
+  dow resultCount < 3 and sqlstt = '00000';
+    resultCount += 1;
+    controlStatement.statement(resultCount) = statement;
+    exec sql
+      FETCH userControlStatement INTO :statement;
+  enddo;
+
+  if resultCount = 0;
+    controlStatement = fetchOrganisationControlStatementDefault();
+  endif;
+
+  return controlStatement;
+
+on-exit;
+  exec sql
+    CLOSE userControlStatement;
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc fetchSessionControlStatement export;
+  dcl-pi *n likeds(t_controlStatement) end-pi;
+
+  dcl-ds controlStatement likeds(t_controlStatement);
+  dcl-s statement like(t_controlStatement.statement);
+  dcl-s resultCount packed(1);
+
+  exec sql 
+    DECLARE sessionControlStatement CURSOR FOR
+      SELECT code
+      FROM replsrc
+      WHERE session_id = (QSYS2.JOB_NAME)
+            AND source_type = :c_control_statement
+      ORDER BY line_number;
+  exec sql
+    OPEN sessionControlStatement;
+  exec sql
+    FETCH sessionControlStatement INTO :statement;
+
+  resultCount = 0;
+
+  dow resultCount < 3 and sqlstt = '00000';
+    resultCount += 1;
+    controlStatement.statement(resultCount) = statement;
+    exec sql
+      FETCH sessionControlStatement INTO :statement;
+  enddo;
+
+  if resultCount = 0;
+    controlStatement = fetchUserControlStatementDefault();
+  endif;
+
+  return controlStatement;
+
+on-exit;
+  exec sql
+    CLOSE sessionControlStatement;
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc storeUserControlStatementDefault export;
+  dcl-pi *n;
+    controlStatement likeds(t_controlStatement) const;
+  end-pi;
+  
+  dcl-ds lineOfCode likeds(t_lineOfCode);
+  dcl-s i like(t_lineOfCode.line);
+
+  exec sql
+    DELETE FROM replsrc
+     WHERE source_type = :c_control_statement
+           AND owner = SESSION_USER
+           AND session_id IS NULL
+           AND save_name IS NULL;
+
+  lineOfCode.line = *zeros;
+
+  for i = 1 to c_control_statements;
+
+    lineOfCode.line = i;
+    lineOfCode.code = controlStatement.statement(i);
+
+    exec sql
+      INSERT INTO replsrc
+        (owner, source_type, line_number, code, last_update)
+      VALUES
+        (SESSION_USER,
+         :c_control_statement,
+         :lineOfCode.line,
+         :lineOfCode.code,
+         CURRENT TIMESTAMP);
+
+  endfor;
+  
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc storeSessionControlStatement export;
+  dcl-pi *n;
+    controlStatement likeds(t_controlStatement) const;
+  end-pi;
+  
+  dcl-ds lineOfCode likeds(t_lineOfCode);
+  dcl-s i like(t_lineOfCode.line);
+
+  clearSessionPseudoCode(c_control_statement);
+  lineOfCode.line = *zeros;
+
+  for i = 1 to c_control_statements;
+
+    lineOfCode.line = i;
+    lineOfCode.code = controlStatement.statement(i);
+
+    storeLineOfPseudoCode(c_control_statement: lineOfCode);
+
+  endfor;
+
+end-proc;
+
+//-----------------------------------------------------------------------

@@ -239,21 +239,32 @@
                 R CONTROL
                                             CHGINPDFT(LC)
                                             OVERLAY
-                                            WINDOW(6 6 8 75)
-                                            CF05(05 'Reset')
-                                            CF10(10 'Confirm')
+                                            WINDOW(6 6 9 75)
+                                            CF07(07 'Org Dft')
+                                            CF08(08 'User Dft')
+                                            CF10(10 'Save')
+                                            CF11(11 'Save User')
                                             CF12(12 'Cancel')
 
                                         1  3'Control Statement'
                                             COLOR(BLU)
-                  S_CONTROL    213A  B  3  3
-                                            CNTFLD(71)
+                  S_CONTROL1    71A  B  3  3
                                             COLOR(GRN)
                                             DSPATR(UL)
-                                        7  3'F5=Reset'
+                  S_CONTROL2    71A  B  4  3
+                                            COLOR(GRN)
+                                            DSPATR(UL)
+                  S_CONTROL3    71A  B  5  3
+                                            COLOR(GRN)
+                                            DSPATR(UL)
+                                        7  3'F7=System default'
                                             COLOR(BLU)
-                                        7 13'F10=Confirm'
+                                        7 22'F8=My default'
                                             COLOR(BLU)
-                                        7 64'F12=Cancel'
+                                        7 45'F10=Save'
+                                            COLOR(BLU)
+                                        7 55'F11=Save as default'
+                                            COLOR(BLU)
+                                        8 64'F12=Cancel'
                                             COLOR(BLU)
 

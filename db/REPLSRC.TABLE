@@ -1,8 +1,8 @@
 CREATE OR REPLACE TABLE replsrc
 (
   --Primary Key
-  CONSTRAINT pk_repl_pseudo_source_code
-  PRIMARY KEY (session_id, source_type, line_number),
+  --CONSTRAINT pk_repl_pseudo_source_code
+  --PRIMARY KEY (session_id, source_type, line_number),
 
   --Columns
   session_id VARCHAR(28),
