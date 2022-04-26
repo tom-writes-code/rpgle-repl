@@ -297,8 +297,9 @@ dcl-proc fetchVariableDefinitionFromCode export;
       return 'IND';
     when %scan('DATE;': code) > 0;
       return 'DATE';
-    when %scan('TIMESTAMP;': code) > 0;
-      return 'TIMESTAMP';
+    when %scan('TIMESTAMP;': code) > 0
+    or %scan('TIMESTAMP(': code) > 0;
+      return 'TIMESTAMP(12)';
     when %scan('TIME;': code) > 0;
       return 'TIME';
     other;
@@ -551,7 +552,8 @@ dcl-proc fetchVariableTypeFromCode export;
       return 'indicator';
     when %scan('DATE;': %scanrpl(' ': '': code)) > 0;
       return 'date';
-    when %scan('TIMESTAMP;': %scanrpl(' ': '': code)) > 0;
+    when %scan('TIMESTAMP;': %scanrpl(' ': '': code)) > 0
+    or %scan('TIMESTAMP(': %scanrpl(' ': '': code)) > 0;
       return 'timestamp';
     when %scan('TIME;': %scanrpl(' ': '': code)) > 0;
       return 'time';
