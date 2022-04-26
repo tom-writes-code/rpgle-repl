@@ -17,6 +17,7 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 
 dcl-proc clearSessionPseudoCode export;
   dcl-pi *n;
+    sourceType like(t_sourceType) const;
     sessionId char(28) const options(*nopass);
   end-pi;
 
@@ -24,7 +25,8 @@ dcl-proc clearSessionPseudoCode export;
 
     exec sql
       DELETE FROM replsrc
-       WHERE session_id = (QSYS2.JOB_NAME);
+       WHERE session_id = (QSYS2.JOB_NAME)
+       AND source_type = :sourceType;
 
     clearSessionPseudoVariables();
 
@@ -34,7 +36,8 @@ dcl-proc clearSessionPseudoCode export;
 
     exec sql
       DELETE FROM replsrc
-       WHERE session_id = :sessionId;
+       WHERE session_id = :sessionId
+       AND source_type = :sourceType;
 
     clearSessionPseudoVariables(sessionId);
 
@@ -152,6 +155,7 @@ dcl-proc prepareFetchLinesOfPseudoCode export;
        SELECT line_number, code
          FROM replsrc AS withBlanks
         WHERE session_id = (QSYS2.JOB_NAME)
+              AND source_type = :c_mainline_code
               AND line_number
                    <= (SELECT COALESCE(MAX(line_number), 0)
                          FROM replsrc AS nonBlanks
@@ -200,14 +204,16 @@ end-proc;
 dcl-proc storeLineOfPseudoCode export;
   dcl-pi *n;
     lineOfCode likeds(t_lineOfCode) const;
+    sourceType like(t_sourceType) const;
   end-pi;
 
   exec sql
     INSERT INTO replsrc
-      (owner, session_id, line_number, code, last_update)
+      (owner, session_id, source_type, line_number, code, last_update)
     VALUES
       (CURRENT USER,
        (QSYS2.JOB_NAME),
+       :sourceType,
        :lineOfCode.line,
        :lineOfCode.code,
        CURRENT TIMESTAMP);
@@ -227,10 +233,11 @@ dcl-proc insertNewLineOfPseudoCode export;
     UPDATE replsrc
        SET line_number = line_number + 1
      WHERE session_id = (QSYS2.JOB_NAME)
+           AND source_type = :c_mainline_code
            AND line_number >= :line + 1;
 
   lineOfCode.line = line + 1;
-  storeLineOfPseudoCode(lineOfCode);
+  storeLineOfPseudoCode(lineOfCode: c_mainline_code);
 
 end-proc;
 
@@ -251,6 +258,7 @@ dcl-proc splitLineOfPseudoCode export;
       INTO :rightLineOfCode.code
       FROM replsrc
      WHERE session_id = (QSYS2.JOB_NAME)
+           AND source_type = :c_mainline_code
            AND line_number = :line;
 
   // Work out what we're leaving behind, and what we're taking
@@ -264,6 +272,7 @@ dcl-proc splitLineOfPseudoCode export;
     UPDATE replsrc
        SET code = :leftLineOfCode
      WHERE session_id = (QSYS2.JOB_NAME)
+           AND source_type = :c_mainline_code
            AND line_number = :line;
 
   // Make room for our new line
@@ -271,11 +280,12 @@ dcl-proc splitLineOfPseudoCode export;
     UPDATE replsrc
        SET line_number = line_number + 1
      WHERE session_id = (QSYS2.JOB_NAME)
+           AND source_type = :c_mainline_code
            AND line_number >= :line + 1;
 
   // Insert our new line
   rightLineOfCode.line = line + 1;
-  storeLineOfPseudoCode(rightLineOfCode);
+  storeLineOfPseudoCode(rightLineOfCode: c_mainline_code);
 
 end-proc;
 
@@ -289,12 +299,14 @@ dcl-proc deleteLineOfPseudoCode export;
   exec sql
     DELETE FROM replsrc
      WHERE session_id = (QSYS2.JOB_NAME)
+           AND source_type = :c_mainline_code
            AND line_number = :line;
 
   exec sql
     UPDATE replsrc
        SET line_number = line_number - 1
      WHERE session_id = (QSYS2.JOB_NAME)
+           AND source_type = :c_mainline_code
            AND line_number > :line;
 
 end-proc;
@@ -363,6 +375,10 @@ end-proc;
 dcl-proc removeUnusedSnippets export;
   dcl-pi *n end-pi;
 
+  // if the control options are non-blank,
+  // but there is no mainline code
+  // then we want to delete the control and mainline source
+
   exec sql
     DELETE FROM replsrc
      WHERE session_id IS NOT NULL
@@ -370,6 +386,7 @@ dcl-proc removeUnusedSnippets export;
     SELECT DISTINCT session_id
       FROM replsrc
      WHERE code <> ''
+           AND source_type = :c_mainline_code
            AND session_id IS NOT NULL);
 
 end-proc;
@@ -395,6 +412,7 @@ dcl-proc prepareFetchStoredSnippets export;
               AND save_name IS NOT NULL)
              OR (:savedSnippets = '0'
                  AND save_name IS NULL))
+        AND source_type = :c_mainline_code
       GROUP BY owner, session_id, save_name
       ORDER BY MAX(COALESCE(last_update,
                  '9999-12-31-24.00.00.000000')) DESC
@@ -439,10 +457,11 @@ dcl-proc fetchStoredSnippets export;
            )
       INTO :storedSnippet.preview
       FROM replsrc
-     WHERE (:storedSnippet.saveName <> ''
-            AND COALESCE(save_name, '') = :storedSnippet.saveName)
-        OR (:storedSnippet.saveName = ''
-            AND COALESCE(session_id, '') = :storedSnippet.sessionId);
+      WHERE ((:storedSnippet.saveName <> ''
+                AND COALESCE(save_name, '') = :storedSnippet.saveName)
+             OR (:storedSnippet.saveName = ''
+                AND COALESCE(session_id, '') = :storedSnippet.sessionId))
+            AND source_type = :c_mainline_code;
 
   return *on;
 
@@ -462,8 +481,9 @@ dcl-proc storeSessionToSaveFile export;
 
   exec sql
     INSERT INTO replsrc
-      (line_number, code, save_name, last_update, owner)
-    SELECT line_number, code, :saveFile, CURRENT TIMESTAMP, CURRENT USER
+      (source_type, line_number, code, save_name, last_update, owner)
+    SELECT source_type, line_number, code, :saveFile, 
+           CURRENT TIMESTAMP, CURRENT USER
       FROM replsrc
      WHERE session_id = (QSYS2.JOB_NAME);
 
@@ -477,12 +497,13 @@ dcl-proc restoreSaveFileToSession export;
     saveFile char(20) const;
   end-pi;
 
-  clearSessionPseudoCode();
+  clearSessionPseudoCode(c_control_options);
+  clearSessionPseudoCode(c_mainline_code);
 
   exec sql
     INSERT INTO replsrc
-      (line_number, code, session_id, last_update, owner)
-    SELECT line_number, code, (QSYS2.JOB_NAME),
+      (source_type, line_number, code, session_id, last_update, owner)
+    SELECT source_type, line_number, code, (QSYS2.JOB_NAME),
            CURRENT TIMESTAMP, CURRENT USER
       FROM replsrc
      WHERE owner = :owner
@@ -505,12 +526,13 @@ dcl-proc restoreSessionToSession export;
     return;
   endif;
 
-  clearSessionPseudoCode();
+  clearSessionPseudoCode(c_control_options);
+  clearSessionPseudoCode(c_mainline_code);
 
   exec sql
     INSERT INTO replsrc
-      (line_number, code, session_id, last_update, owner)
-    SELECT line_number, code, (QSYS2.JOB_NAME),
+      (source_type, line_number, code, session_id, last_update, owner)
+    SELECT source_type, line_number, code, (QSYS2.JOB_NAME),
            CURRENT TIMESTAMP, CURRENT USER
       FROM replsrc
      WHERE session_id = :sessionId;

@@ -8,6 +8,12 @@
 /include repl_eval
 /include repl_pseut
 
+dcl-s t_sourceType char(10) template;
+// Code which should sit with the `ctl-opt` section
+dcl-c c_control_options 'control';
+// Code which should sit after the /include qrpgleref,repl_hlpr line
+dcl-c c_mainline_code 'mainline';
+
 // Clear the current session existing code from the
 //   REPLSRC table.
 dcl-pr clearSessionPseudoCode;
@@ -45,6 +51,7 @@ end-pr;
 // Add a single line of code for this session to the REPLSRC table.
 dcl-pr storeLineOfPseudoCode;
   lineOfCode likeds(t_lineOfCode) const;
+  sourceType like(t_sourceType) const;
 end-pr;
 
 // Insert a new blank line for this session in the REPLSRC table.
