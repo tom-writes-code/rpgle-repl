@@ -66,8 +66,10 @@ dcl-ds dspinds qualified;
   save_saveFileAlreadyExists ind pos(99);
 
   // for the control statement window
-  control_statement_reset ind pos(5);
-  control_statement_save ind pos(10);
+  control_statement_reset_to_organisation_default ind pos(7);
+  control_statement_reset_to_user_default ind pos(8);
+  control_statement_save_only ind pos(10);
+  control_statement_save_and_set_default ind pos(11);
   control_statement_cancel ind pos(12);
 
   validCodeLine ind pos(30);
@@ -145,7 +147,6 @@ dcl-proc main;
 
   savedCursorPosition = resetCursorPosition();
   showRuler = resetShowRuler();
-  resetControlStatement();
 
   dow not dspinds.exit;
 
@@ -481,31 +482,14 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
-dcl-proc saveControlOptions;
-
-  dcl-ds lineOfCode likeds(t_lineOfCode);
-  dcl-s i like(t_lineOfCode.line);
-
-  clearSessionPseudoCode(c_control_options);
-  lineOfCode.line = *zeros;
-
-  for i = 1 to 3;
-
-    lineOfCode.line = i;
-    lineOfCode.code = %subst(S_CONTROL: (71*(i-1) + 1): 71);
-
-    storeLineOfPseudoCode(lineofCode: c_control_options);
-
-  endfor;
-
-end-proc;
-
-//-----------------------------------------------------------------------
-
 dcl-proc saveSourceCode;
 
   dcl-ds lineOfCode likeds(t_lineOfCode);
   dcl-s i like(t_lineOfCode.line);
+
+  // we might not have explicitly set this, so save whatever the current 
+  // default ctl-opt is to this particular session
+  storeSessionControlStatement(fetchSessionControlStatement());
 
   clearSessionPseudoCode(c_mainline_code);
   lineOfCode.line = *zeros;
@@ -522,7 +506,7 @@ dcl-proc saveSourceCode;
       lineOfCode.line = %dec(cl_lineNum: 6: 0);
       lineOfCode.code = cl_code;
 
-      storeLineOfPseudoCode(lineOfCode: c_mainline_code);
+      storeLineOfPseudoCode(c_mainline_code: lineOfCode);
 
     endif;
 
@@ -812,31 +796,68 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
-dcl-proc editControlStatement;
-  
-  dow not dspinds.control_statement_save 
-  and not dspinds.control_statement_cancel;
+dcl-proc setDisplayControlStatement;
+  dcl-pi *n;
+    controlStatement likeds(t_controlStatement) const;
+  end-pi;
 
-    if dspinds.control_statement_reset;
-      resetControlStatement();
-      dspinds.control_statement_reset = *off;
-    endif; 
-
-    exfmt control;
-  enddo;
-
-  dspinds.control_statement_save = *off;
-  dspinds.control_statement_cancel = *off;  
+  S_CONTROL1 = controlStatement.statement(1);
+  S_CONTROL2 = controlStatement.statement(2);
+  S_CONTROL3 = controlStatement.statement(3);
 
 end-proc;
 
 //-----------------------------------------------------------------------
 
-dcl-proc resetControlStatement;
+dcl-proc getDisplayControlStatement;
+  dcl-pi *n likeds(t_controlStatement) end-pi;
 
-  s_control = 
-    'ctl-opt datedit(*ymd) option(*nodebugio : *nosrcstmt)                  '
-  + 'fixnbr(*zoned : *inputpacked);';
+  dcl-ds controlStatement likeds(t_controlStatement);
+
+  controlStatement.statement(1) = S_CONTROL1;
+  controlStatement.statement(2) = S_CONTROL2;
+  controlStatement.statement(3) = S_CONTROL3;
+
+  return controlStatement;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc editControlStatement;
+
+  setDisplayControlStatement(fetchSessionControlStatement());
+  
+  dow not dspinds.control_statement_save_and_set_default 
+  and not dspinds.control_statement_save_only
+  and not dspinds.control_statement_cancel;
+
+    if dspinds.control_statement_reset_to_organisation_default;
+      setDisplayControlStatement(fetchOrganisationControlStatementDefault());
+      dspinds.control_statement_reset_to_organisation_default = *off;
+    endif;
+
+    if dspinds.control_statement_reset_to_user_default;
+      setDisplayControlStatement(fetchUserControlStatementDefault());
+      dspinds.control_statement_reset_to_user_default = *off;
+    endif;
+
+    exfmt control;
+
+    if dspinds.control_statement_save_only;
+      storeSessionControlStatement(getDisplayControlStatement());
+    endif; 
+
+    if dspinds.control_statement_save_and_set_default;
+      storeSessionControlStatement(getDisplayControlStatement());
+      storeUserControlStatementDefault(getDisplayControlStatement());
+    endif; 
+
+  enddo;
+
+  dspinds.control_statement_save_only = *off;
+  dspinds.control_statement_save_and_set_default = *off;
+  dspinds.control_statement_cancel = *off;  
 
 end-proc;
 

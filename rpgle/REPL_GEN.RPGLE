@@ -71,10 +71,19 @@ end-proc;
 
 dcl-proc setGeneratedSourceObjectControlOptions;
 
-  insertSingleLineOfGeneratedCode
-    ('ctl-opt datedit(*ymd) option(*nodebugio : *nosrcstmt)');
-  insertSingleLineOfGeneratedCode
-    ('fixnbr(*zoned : *inputpacked);');
+  dcl-ds controlStatement likeds(t_controlStatement);
+  dcl-s i packed(1);
+
+  controlStatement = fetchSessionControlStatement();
+
+  for i = 1 to c_control_statements;
+
+    if controlStatement.statement(i) <> *blanks;
+      insertSingleLineOfGeneratedCode(controlStatement.statement(i));
+    endif;
+
+  endfor;
+
   insertSingleLineOfGeneratedCode(*blanks);
 
 end-proc;

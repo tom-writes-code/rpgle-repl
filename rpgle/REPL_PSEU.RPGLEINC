@@ -8,15 +8,21 @@
 /include repl_eval
 /include repl_pseut
 
+dcl-c c_control_statements 3;
+dcl-ds t_controlStatement qualified template;
+  statement like(t_lineOfCode.code) dim(c_control_statements);  
+end-ds;
+
 dcl-s t_sourceType char(10) template;
 // Code which should sit with the `ctl-opt` section
-dcl-c c_control_options 'control';
+dcl-c c_control_statement 'control';
 // Code which should sit after the /include qrpgleref,repl_hlpr line
 dcl-c c_mainline_code 'mainline';
 
 // Clear the current session existing code from the
 //   REPLSRC table.
 dcl-pr clearSessionPseudoCode;
+  sourceType like(t_sourceType) const;
   sessionId char(28) const options(*nopass);
 end-pr;
 // Clear the current session existing results from the
@@ -50,8 +56,8 @@ end-pr;
 
 // Add a single line of code for this session to the REPLSRC table.
 dcl-pr storeLineOfPseudoCode;
-  lineOfCode likeds(t_lineOfCode) const;
   sourceType like(t_sourceType) const;
+  lineOfCode likeds(t_lineOfCode) const;
 end-pr;
 
 // Insert a new blank line for this session in the REPLSRC table.
@@ -137,4 +143,33 @@ end-pr;
 dcl-pr deleteSaveFileForOwner;
   owner char(10) const;
   saveFile char(20) const;
+end-pr;
+
+// Fetch the organisation default control statement.
+// This exists in replsrc with type "control", and will have a null
+// session ID, save name, and session ID. There is no maintenance
+// function for setting this, but it can be manually added to the file.
+dcl-pr fetchOrganisationControlStatementDefault likeds(t_controlStatement);
+end-pr;
+
+// Fetch the user default control statement.
+// This exists in replsrc with type "control", and will have a null
+// session ID and save name. 
+dcl-pr fetchUserControlStatementDefault likeds(t_controlStatement);
+end-pr;
+
+// Fetch the session control statement.
+// This exists in replsrc with type "control", and will have the relevant
+// session ID.
+dcl-pr fetchSessionControlStatement likeds(t_controlStatement);
+end-pr;
+
+// Store the current control statement to be the user default.
+dcl-pr storeUserControlStatementDefault;
+  controlStatement likeds(t_controlStatement) const;
+end-pr;
+
+// Store the current control statement to this session.  
+dcl-pr storeSessionControlStatement;
+  controlStatement likeds(t_controlStatement) const;
 end-pr;

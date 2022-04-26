@@ -234,7 +234,7 @@ dcl-proc processOptions;
         if S_SAVENAME <> *blanks;
           deleteSaveFileForOwner(S_OWNER: S_SAVENAME);
         else;
-          clearSessionPseudoCode(c_control_options: S_SESSION);
+          clearSessionPseudoCode(c_control_statement: S_SESSION);
           clearSessionPseudoCode(c_mainline_code: S_SESSION);
         endif;
       endif;
