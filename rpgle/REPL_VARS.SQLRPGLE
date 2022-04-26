@@ -297,8 +297,9 @@ dcl-proc fetchVariableDefinitionFromCode export;
       return 'IND';
     when %scan('DATE;': code) > 0;
       return 'DATE';
-    when %scan('TIMESTAMP;': code) > 0;
-      return 'TIMESTAMP';
+    when %scan('TIMESTAMP;': code) > 0
+    or %scan('TIMESTAMP(': code) > 0;
+      return 'TIMESTAMP(12)';
     when %scan('TIME;': code) > 0;
       return 'TIME';
     other;
@@ -551,7 +552,8 @@ dcl-proc fetchVariableTypeFromCode export;
       return 'indicator';
     when %scan('DATE;': %scanrpl(' ': '': code)) > 0;
       return 'date';
-    when %scan('TIMESTAMP;': %scanrpl(' ': '': code)) > 0;
+    when %scan('TIMESTAMP;': %scanrpl(' ': '': code)) > 0
+    or %scan('TIMESTAMP(': %scanrpl(' ': '': code)) > 0;
       return 'timestamp';
     when %scan('TIME;': %scanrpl(' ': '': code)) > 0;
       return 'time';
@@ -1022,7 +1024,7 @@ dcl-proc fetchStoredVariable export;
 
     SELECT CAST(CASE WHEN parentQualified = 'Y'
                         THEN TRIM(parent_data_structure)
-                             || '.' || variable_name
+                             CONCAT '.' CONCAT variable_name
                       ELSE variable_name END AS CHAR(70)),
             CAST(variable_type AS CHAR(10)),
             COALESCE(array_size, 0),
@@ -1041,8 +1043,8 @@ dcl-proc fetchStoredVariable export;
       WHERE session_id = (QSYS2.JOB_NAME)
            AND (UPPER(variable_name) = UPPER(:variableName)
                 OR UPPER(TRIM(parent_data_structure)
-                         || '.'
-                         || TRIM(variable_name))
+                         CONCAT '.'
+                         CONCAT TRIM(variable_name))
                    = UPPER(:variableName))
            AND variable_scope = :scope;
 
@@ -1149,7 +1151,7 @@ dcl-proc prepareListOfDataStructureFields export;
      SELECT DISTINCT
             CAST(CASE WHEN parentQualified = 'Y'
                         THEN TRIM(parent_data_structure)
-                             || '.' || variable_name
+                             CONCAT '.' CONCAT variable_name
                       ELSE variable_name END AS CHAR(70)),
             CAST(variable_type AS CHAR(10)),
             COALESCE(array_size, 0),
@@ -1260,7 +1262,7 @@ dcl-proc prepareListOfVariables export;
      SELECT DISTINCT
             CAST(CASE WHEN COALESCE(parentQualified, 'N') = 'Y'
                         THEN TRIM(parent_data_structure)
-                             || '.' || variable_name
+                             CONCAT '.' CONCAT variable_name
                       ELSE variable_name END AS CHAR(70)),
             CAST(variable_type AS CHAR(10)),
             COALESCE(array_size, 0),
