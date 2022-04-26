@@ -24,7 +24,7 @@ dcl-proc insertSingleLineOfGeneratedCode export;
       INSERT INTO qtemp/repl_alias
         (srcdta)
       VALUES
-        ('     ' || :code);
+        ('     ' CONCAT :code);
 
   else;
 
@@ -32,7 +32,7 @@ dcl-proc insertSingleLineOfGeneratedCode export;
       INSERT INTO qtemp/repl_alias
         (srcdta)
       VALUES
-        ('       ' || :code);
+        ('       ' CONCAT :code);
 
   endif;
 
