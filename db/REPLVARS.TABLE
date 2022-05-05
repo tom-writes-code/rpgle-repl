@@ -22,21 +22,16 @@ CREATE OR REPLACE TABLE replvars
   is_used FOR COLUMN isused CHAR(1) DEFAULT 'N'
 
 )
---Record Format
 RCDFMT replvarsf;
 
---Long Name
 RENAME replvars TO repl_variables FOR SYSTEM NAME replvars;
 
---Table Label (The see/change object description should also match this)
 LABEL ON TABLE replvars IS
   'repl_variables';
 
---Table Comment
 COMMENT ON TABLE replvars IS
   'Stores details about the variables declared in the source code';
 
---Column Text
 LABEL ON COLUMN replvars
 (
   session_id TEXT IS 'Session ID',

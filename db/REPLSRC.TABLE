@@ -1,9 +1,8 @@
--- Table Definition
 CREATE OR REPLACE TABLE replsrc
 (
   --Primary Key
   --CONSTRAINT pk_repl_pseudo_source_code
-  --PRIMARY KEY (session_id, line_number),
+  --PRIMARY KEY (session_id, source_type, line_number),
 
   --Columns
   session_id VARCHAR(28),
@@ -11,24 +10,22 @@ CREATE OR REPLACE TABLE replsrc
   code VARCHAR(71) NOT NULL,
   save_name char(20),
   last_update FOR COLUMN lastupdate TIMESTAMP,
-  owner CHAR(10)
+  owner CHAR(10),
+  source_type FOR COLUMN sourcetype CHAR(10) NOT NULL DEFAULT 'mainline'
+    CONSTRAINT ck_replsrc_source_type
+    CHECK(source_type IN ('mainline', 'control'))
 
 )
---Record Format
 RCDFMT replsrcF;
 
---Long Name
 RENAME replsrc TO repl_pseudo_source_code FOR SYSTEM NAME replsrc;
 
---Table Label (The see/change object description should also match this)
 LABEL ON TABLE replsrc IS
   'repl_pseudo_source_code';
 
---Table Comment
 COMMENT ON TABLE replsrc IS
   'Stores user created source code for use in repl';
 
---Column Text
 LABEL ON COLUMN replsrc
 (
   session_id TEXT IS 'Session ID',
@@ -36,6 +33,7 @@ LABEL ON COLUMN replsrc
   code TEXT IS 'Code',
   save_name TEXT IS 'Save Name',
   last_update TEXT IS 'Last Update',
-  owner TEXT IS 'Owning User'
+  owner TEXT IS 'Owning User',
+  source_type TEXT IS 'Source Type'
 );
 

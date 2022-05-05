@@ -39,6 +39,7 @@ dcl-ds dspinds qualified;
   run ind pos(12);
   deleteLine ind pos(14);
   splitLine ind pos(15);
+  changeControlStatement ind pos(16);
   showGeneratedSource ind pos(17);
 
   saveLoadSnippet ind pos(21);
@@ -63,6 +64,13 @@ dcl-ds dspinds qualified;
   save_confirm ind pos(10);
   save_cancel ind pos(12);
   save_saveFileAlreadyExists ind pos(99);
+
+  // for the control statement window
+  control_statement_reset_to_organisation_default ind pos(7);
+  control_statement_reset_to_user_default ind pos(8);
+  control_statement_save_only ind pos(10);
+  control_statement_save_and_set_default ind pos(11);
+  control_statement_cancel ind pos(12);
 
   validCodeLine ind pos(30);
 
@@ -479,7 +487,11 @@ dcl-proc saveSourceCode;
   dcl-ds lineOfCode likeds(t_lineOfCode);
   dcl-s i like(t_lineOfCode.line);
 
-  clearSessionPseudoCode();
+  // we might not have explicitly set this, so save whatever the current 
+  // default ctl-opt is to this particular session
+  storeSessionControlStatement(fetchSessionControlStatement());
+
+  clearSessionPseudoCode(c_mainline_code);
   lineOfCode.line = *zeros;
 
   i = 1;
@@ -494,7 +506,7 @@ dcl-proc saveSourceCode;
       lineOfCode.line = %dec(cl_lineNum: 6: 0);
       lineOfCode.code = cl_code;
 
-      storeLineOfPseudoCode(lineOfCode);
+      storeLineOfPseudoCode(c_mainline_code: lineOfCode);
 
     endif;
 
@@ -552,7 +564,7 @@ dcl-proc processOption;
         'snippet? This action cannot be undone.';
       exfmt confirm;
       if dspinds.confirm_confirm;
-        clearSessionPseudoCode();
+        clearSessionPseudoCode(c_mainline_code);
         savedCursorPosition = resetCursorPosition();
       endif;
       dspinds.confirm_confirm = *off;
@@ -671,6 +683,10 @@ dcl-proc processOption;
       savedCursorPosition.row += 1;
       savedCursorPosition.showingRow += 1;
 
+    // f16
+    when dspinds.changeControlStatement;
+      editControlStatement();
+
     // f17
     when dspinds.showGeneratedSource;
       monitor;
@@ -775,6 +791,73 @@ on-exit;
   dspinds.save_confirm = *off;
   dspinds.save_cancel = *off;
   dspinds.save_saveFileAlreadyExists = *off;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc setDisplayControlStatement;
+  dcl-pi *n;
+    controlStatement likeds(t_controlStatement) const;
+  end-pi;
+
+  S_CONTROL1 = controlStatement.statement(1);
+  S_CONTROL2 = controlStatement.statement(2);
+  S_CONTROL3 = controlStatement.statement(3);
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc getDisplayControlStatement;
+  dcl-pi *n likeds(t_controlStatement) end-pi;
+
+  dcl-ds controlStatement likeds(t_controlStatement);
+
+  controlStatement.statement(1) = S_CONTROL1;
+  controlStatement.statement(2) = S_CONTROL2;
+  controlStatement.statement(3) = S_CONTROL3;
+
+  return controlStatement;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc editControlStatement;
+
+  setDisplayControlStatement(fetchSessionControlStatement());
+  
+  dow not dspinds.control_statement_save_and_set_default 
+  and not dspinds.control_statement_save_only
+  and not dspinds.control_statement_cancel;
+
+    if dspinds.control_statement_reset_to_organisation_default;
+      setDisplayControlStatement(fetchOrganisationControlStatementDefault());
+      dspinds.control_statement_reset_to_organisation_default = *off;
+    endif;
+
+    if dspinds.control_statement_reset_to_user_default;
+      setDisplayControlStatement(fetchUserControlStatementDefault());
+      dspinds.control_statement_reset_to_user_default = *off;
+    endif;
+
+    exfmt control;
+
+    if dspinds.control_statement_save_only;
+      storeSessionControlStatement(getDisplayControlStatement());
+    endif; 
+
+    if dspinds.control_statement_save_and_set_default;
+      storeSessionControlStatement(getDisplayControlStatement());
+      storeUserControlStatementDefault(getDisplayControlStatement());
+    endif; 
+
+  enddo;
+
+  dspinds.control_statement_save_only = *off;
+  dspinds.control_statement_save_and_set_default = *off;
+  dspinds.control_statement_cancel = *off;  
 
 end-proc;
 
