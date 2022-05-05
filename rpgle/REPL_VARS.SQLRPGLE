@@ -271,10 +271,16 @@ dcl-proc fetchVariableDefinitionFromCode export;
       code = %subst(
         code: 1: %scan(')': code)
       );
-    when %scan('UNSIGNED(': code) > 0
-    or %scan('UNS(': code) > 0;
+    when %scan('UNSIGNED(': code) > 0;
       code = %subst(
         code: %scan('UNSIGNED(': code)
+      );
+      code = %subst(
+        code: 1: %scan(')': code)
+      );
+    when %scan('UNS(': code) > 0;
+      code = %subst(
+        code: %scan('UNS(': code)
       );
       code = %subst(
         code: 1: %scan(')': code)
