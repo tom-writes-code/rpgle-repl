@@ -79,9 +79,9 @@ dcl-proc evaluateLineOfPseudoCode export;
       // not an array, maybe a data structure
       when variable.arraySize <= 1;
         insertSingleLineOfGeneratedCode
-          ('replResult_'
+          ('repl_'
               + %trim(variable.scope) + '_'
-              + %trim(%scanrpl('.':'_':variable.name))
+              + %trim(%scanrpl('.':'_':%char(variable.id)))
               + '_single(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
@@ -94,9 +94,9 @@ dcl-proc evaluateLineOfPseudoCode export;
       when (variable.arraySize > 1)
       and arrayElement <> 0;
         insertSingleLineOfGeneratedCode
-          ('replResult_'
+          ('repl_'
               + %trim(variable.scope) + '_'
-              + %trim(%scanrpl('.':'_':variable.name))
+              + %trim(%scanrpl('.':'_':%char(variable.id)))
               + '_single(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
@@ -109,9 +109,9 @@ dcl-proc evaluateLineOfPseudoCode export;
       when (variable.arraySize > 1)
       and arrayElement = 0;
         insertSingleLineOfGeneratedCode
-          ('replResult_'
+          ('repl_'
               + %trim(variable.scope) + '_'
-              + %trim(%scanrpl('.':'_':variable.name))
+              + %trim(%scanrpl('.':'_':%char(variable.id)))
               + '_multiple(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
@@ -320,9 +320,9 @@ dcl-proc replResult_evaluate_fld_single export;
   endif;
 
   insertSingleLineOfGeneratedCode
-    ('dcl-proc replResult_'
+    ('dcl-proc repl_'
        + %trim(variable.scope) + '_'
-       + %trim(%scanrpl('.':'_':variable.name)) + '_single;');
+       + %trim(%scanrpl('.':'_':%char(variable.id))) + '_single;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -390,9 +390,9 @@ dcl-proc replResult_evaluate_fld_multiple export;
   end-pi;
 
   insertSingleLineOfGeneratedCode
-    ('dcl-proc replResult_'
+    ('dcl-proc repl_'
        + %trim(variable.scope) + '_'
-       + %trim(%scanrpl('.':'_':variable.name)) + '_multiple;');
+       + %trim(%scanrpl('.':'_':%char(variable.id))) + '_multiple;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -411,9 +411,9 @@ dcl-proc replResult_evaluate_fld_multiple export;
   insertSingleLineOfGeneratedCode
     ('  for repl_j = 1 to ' + %char(variable.arraySize) + ';');
   insertSingleLineOfGeneratedCode
-    ('    replResult_'
+    ('    repl_'
        + %trim(variable.scope) + '_'
-       + %trim(%scanrpl('.':'_':variable.name))
+       + %trim(%scanrpl('.':'_':%char(variable.id)))
        + '_single');
   insertSingleLineOfGeneratedCode
     ('     (repl_line:');
@@ -441,9 +441,9 @@ dcl-proc replResult_evaluate_ds_single export;
   dcl-ds subFieldOnly likeds(t_variable);
 
   insertSingleLineOfGeneratedCode
-    ('dcl-proc replResult_'
+    ('dcl-proc repl_'
        + %trim(variable.scope) + '_'
-       + %trim(%scanrpl('.':'_':variable.name)) + '_single;');
+       + %trim(%scanrpl('.':'_':%char(variable.id))) + '_single;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -476,9 +476,9 @@ dcl-proc replResult_evaluate_ds_single export;
 
     if subField.arraySize = 0;
       insertSingleLineOfGeneratedCode
-        ('  replResult_'
+        ('  repl_'
            + %trim(variable.scope) + '_'
-           + %trim(%scanrpl('.':'_':proc_subField.name))
+           + %trim(%scanrpl('.':'_':%char(proc_subField.id)))
            + '_single(');
       insertSingleLineOfGeneratedCode
         ('   repl_line: ');
@@ -488,9 +488,9 @@ dcl-proc replResult_evaluate_ds_single export;
         ('   ' + %trim(subField.name) + ');');
     else;
       insertSingleLineOfGeneratedCode
-        ('  replResult_'
+        ('  repl_'
            + %trim(variable.scope) + '_'
-           + %trim(%scanrpl('.':'_':proc_subField.name))
+           + %trim(%scanrpl('.':'_':%char(proc_subField.id)))
            + '_multiple(');
       insertSingleLineOfGeneratedCode
         ('   repl_line: ');
@@ -515,9 +515,9 @@ dcl-proc replResult_evaluate_ds_multiple export;
   end-pi;
 
   insertSingleLineOfGeneratedCode
-    ('dcl-proc replResult_'
+    ('dcl-proc repl_'
        + %trim(variable.scope) + '_'
-       + %trim(%scanrpl('.':'_':variable.name)) + '_multiple;');
+       + %trim(%scanrpl('.':'_':%char(variable.id))) + '_multiple;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -542,9 +542,9 @@ dcl-proc replResult_evaluate_ds_multiple export;
   insertSingleLineOfGeneratedCode
     ('  for repl_j = 1 to ' + %char(variable.arraySize) + ';');
   insertSingleLineOfGeneratedCode
-    ('    replResult_'
+    ('    repl_'
        + %trim(variable.scope) + '_'
-       + %trim(%scanrpl('.':'_':variable.name)) + '_single(');
+       + %trim(%scanrpl('.':'_':%char(variable.id))) + '_single(');
   insertSingleLineOfGeneratedCode
     ('      repl_line: ');
   insertSingleLineOfGeneratedCode
