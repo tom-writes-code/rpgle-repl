@@ -13,6 +13,15 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 
 //-----------------------------------------------------------------------
 
+dcl-ds t_compilationErrorDetails qualified template;
+  code char(7);
+  severity packed(2);
+  line packed(4);
+  text char(80);
+end-ds;
+
+//-----------------------------------------------------------------------
+
 dcl-proc compileGeneratedSourceObject export;
   dcl-pi *n;
     showModuleInstructions ind const;
@@ -54,6 +63,7 @@ dcl-proc compileGeneratedSourceObject export;
                  c_generatedSourceFile:
                  c_generatedSourceMember);
   on-error;
+    printCompilationErrors();
     thrownError.errorCode = c_error_module_not_created;
     throw(thrownError);
   endmon;
@@ -120,14 +130,186 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
+dcl-proc printCompilationErrors;
+
+  dcl-ds compilationErrorDetails likeds(t_compilationErrorDetails);
+
+  prepareCompilationErrorsList();
+
+  dow replCompilationErrorFound(compilationErrorDetails);
+
+    // less than severity 30 passes for a warning, so skip it
+    // non-zero line means it isn't from something our user did
+    // ... except, maybe, I guess it might because our source re-uses
+    // sequence numbers a lot, but let's just hope for the best on that
+    // for now
+    if compilationErrorDetails.severity > 20
+    and compilationErrorDetails.line <> 0;
+
+      exec sql
+        INSERT INTO replrslt
+          (line_number, result_number, result_description)
+          (SELECT :compilationErrorDetails.line,
+                  COALESCE(MAX(result_number), 0)+1,
+                  trim(:compilationErrorDetails.text)
+                    CONCAT ' ('
+                    CONCAT trim(:compilationErrorDetails.code)
+                    CONCAT ', SEVERITY '
+                    CONCAT trim(:compilationErrorDetails.severity)
+                    CONCAT ')'
+             FROM replrslt
+            WHERE session_id = QSYS2.JOB_NAME
+              AND line_number = :compilationErrorDetails.line);
+
+    endif;
+
+  enddo;
+
+on-exit;
+
+  exec sql CLOSE repl_compilationErrors;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc prepareCompilationErrorsList;
+
+  exec sql
+    DECLARE repl_compilationErrors CURSOR FOR
+    WITH                                                                
+    start_of_rpg_diagnostic_messages AS (                                   
+      SELECT ordinal_position                                           
+        FROM TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                          
+               JOB_NAME => QSYS2.JOB_NAME,                              
+               SPOOLED_FILE_NAME =>'REPL_MOD'))                         
+      WHERE spooled_data LIKE                                             
+         '%A d d i t i o n a l   D i a g n o s t i c   M e s s a g e s%'
+    ),                                                                  
+    end_of_rpg_diagnostic_messages AS (                                     
+      SELECT ordinal_position                                           
+        FROM TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                          
+               JOB_NAME => QSYS2.JOB_NAME,                              
+               SPOOLED_FILE_NAME =>'REPL_MOD'))                         
+      WHERE spooled_data LIKE                                             
+         '%* * * * *   E N D   O F   A D D I T I O N A L   D I A G N O S T I C%'
+    ),                                                               
+    start_of_sql_diagnostic_messages AS (                                   
+      SELECT ordinal_position                                           
+        FROM TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                          
+               JOB_NAME => QSYS2.JOB_NAME,                              
+               SPOOLED_FILE_NAME =>'REPL_MOD'))                         
+      WHERE spooled_data LIKE                                             
+         '%MSG ID  SEV  RECORD  TEXT%'
+    ),                                                                  
+    end_of_sql_diagnostic_messages AS (                                     
+      SELECT ordinal_position                                           
+        FROM TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                          
+               JOB_NAME => QSYS2.JOB_NAME,                              
+               SPOOLED_FILE_NAME =>'REPL_MOD'))                         
+      WHERE spooled_data LIKE                                             
+         '%Message Summary%'
+    ),
+    sql_line_translation AS (
+      SELECT cast(trim(substring(spooled_data, 3, 4)) AS dec(4, 0)) as sql_record,
+             cast(trim(substring(spooled_data, 92, 4)) AS dec(4, 0)) as rpg_line
+        FROM TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                    
+               JOB_NAME => QSYS2.JOB_NAME,                        
+               SPOOLED_FILE_NAME =>'REPL_MOD'))  
+       // ignore anything containing not-integers or is just blank 
+       WHERE replace(translate(trim(substring(
+               spooled_data, 3, 4)), '0', '123456789', '0'), '0', '') = '' 
+       AND replace(translate(trim(substring(
+               spooled_data, 92, 4)), '0', '123456789', '0'), '0', '') = ''  
+       AND trim(substring(spooled_data, 3, 4)) <> ''
+       AND trim(substring(spooled_data, 92, 4)) <> ''                   
+    )                                                                  
+    SELECT                                                              
+           cast(substring(spooled_data, 2, 7) as char(7)) as message_id,  
+           cast(substring(spooled_data, 10, 2) as dec(2, 0)) as severity, 
+           cast(substring(spooled_data, 20, 4) as dec(4, 0)) as line,     
+           cast(substring(spooled_data, 28, 80) as char(80)) as error_text
+      FROM TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                            
+             JOB_NAME => QSYS2.JOB_NAME,                                
+             SPOOLED_FILE_NAME =>'REPL_MOD')) messages                  
+      JOIN start_of_rpg_diagnostic_messages start_of                        
+           ON start_of.ordinal_position + 1 < messages.ordinal_position 
+      JOIN end_of_rpg_diagnostic_messages end_of                            
+           ON end_of.ordinal_position > messages.ordinal_position
+      WHERE cast(substring(spooled_data, 2, 7) as char(7)) <> '' 
+    UNION ALL                                                                  
+    SELECT                                                                                                                     
+           cast(substring(messages_1.spooled_data, 1, 7) as char(7)) as message_id,  
+           cast(substring(messages_1.spooled_data, 10, 2) as dec(2, 0)) as severity, 
+           sql_line_translation.rpg_line as line,     
+           // SQL sometimes splits these out over at least two lines. It's
+           // possible there's sometimes a third.
+           cast(trim(substring(messages_1.spooled_data, 22, 80))
+             concat ' '
+             concat trim(coalesce(substring(messages_2.spooled_data, 22, 80), '')) 
+             concat ' '
+             concat trim(coalesce(substring(messages_3.spooled_data, 22, 80), '')) 
+             as char(80)) as error_text
+      FROM TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                            
+             JOB_NAME => QSYS2.JOB_NAME,                                
+             SPOOLED_FILE_NAME =>'REPL_MOD')) messages_1            
+      JOIN start_of_sql_diagnostic_messages start_of                        
+           ON start_of.ordinal_position < messages_1.ordinal_position 
+      JOIN end_of_sql_diagnostic_messages end_of                            
+           ON end_of.ordinal_position > messages_1.ordinal_position
+      LEFT JOIN TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                            
+             JOB_NAME => QSYS2.JOB_NAME,                                
+             SPOOLED_FILE_NAME =>'REPL_MOD')) messages_2
+           ON messages_2.ordinal_position = messages_1.ordinal_position + 1
+           AND cast(substring(messages_2.spooled_data, 1, 7) as char(7)) = '' 
+           AND cast(substring(messages_1.spooled_data, 1, 7) as char(7)) <> '' 
+           AND messages_2.ordinal_position < end_of.ordinal_position   
+      LEFT JOIN TABLE(SYSTOOLS.SPOOLED_FILE_DATA(                            
+             JOB_NAME => QSYS2.JOB_NAME,                                
+             SPOOLED_FILE_NAME =>'REPL_MOD')) messages_3
+           ON messages_3.ordinal_position = messages_2.ordinal_position + 1
+           AND cast(substring(messages_3.spooled_data, 1, 7) as char(7)) = '' 
+           AND cast(substring(messages_2.spooled_data, 1, 7) as char(7)) = ''   
+           AND messages_3.ordinal_position < end_of.ordinal_position   
+      LEFT JOIN sql_line_translation 
+           ON sql_line_translation.sql_record 
+               = cast(substring(messages_1.spooled_data, 16, 4) as dec(4, 0))
+      WHERE substring(messages_1.spooled_data, 1, 7) <>  '';
+
+  exec sql
+    OPEN repl_compilationErrors;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc replCompilationErrorFound;
+  dcl-pi *n ind;
+    compilationErrorDetails likeds(t_compilationErrorDetails);
+  end-pi;
+
+  exec sql
+    FETCH NEXT FROM repl_compilationErrors
+     INTO :compilationErrorDetails.code,
+          :compilationErrorDetails.severity,
+          :compilationErrorDetails.line,
+          :compilationErrorDetails.text;
+
+  return sqlstt = '00000';   
+
+end-proc;
+
+//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
+
 dcl-proc prepareUserBoundServicePrograms export;
 
   exec sql
     DECLARE repl_userServicePrograms CURSOR FOR
-     SELECT UPPER(code) FROM replsrc
+     SELECT upper(code) FROM replsrc
       WHERE session_id = (QSYS2.JOB_NAME)
-            AND (UPPER(TRIM(code)) LIKE '/INCLUDE%'
-                 OR UPPER(TRIM(code)) LIKE '/COPY%');
+            AND (upper(trim(code)) LIKE '/INCLUDE%'
+                 OR upper(trim(code)) LIKE '/COPY%');
 
   exec sql
     CLOSE repl_userServicePrograms;

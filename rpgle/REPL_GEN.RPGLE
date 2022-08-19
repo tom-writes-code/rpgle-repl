@@ -146,7 +146,7 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
     endif;
 
     if replCode;
-      insertSingleLineOfGeneratedCode(lineOfCode.code);
+      insertSingleLineOfGeneratedCode(lineOfCode.code: lineOfCode.line);
     endif;
 
     // ignore comments
