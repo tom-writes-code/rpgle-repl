@@ -16,23 +16,30 @@ dcl-c c_aliasName 'REPL_ALIAS';
 dcl-proc insertSingleLineOfGeneratedCode export;
   dcl-pi *n;
     code like(t_lineOfCode.code) const;
+    line like(t_lineOfCode.line) options(*nopass) const;
   end-pi;
+
+  dcl-s line0 like(t_lineOfCode.line) inz(0);
+
+  if %parms() >= %parmnum(line) and %addr(line) <> *null;
+    line0 = line;
+  endif;
 
   if codeIsFixedFormat(code);
 
     exec sql
       INSERT INTO qtemp/repl_alias
-        (srcdta)
+        (srcseq, srcdta)
       VALUES
-        ('     ' CONCAT :code);
+        (:line0, '     ' CONCAT :code);
 
   else;
 
     exec sql
       INSERT INTO qtemp/repl_alias
-        (srcdta)
+        (srcseq, srcdta)
       VALUES
-        ('       ' CONCAT :code);
+        (:line0, '       ' CONCAT :code);
 
   endif;
 
