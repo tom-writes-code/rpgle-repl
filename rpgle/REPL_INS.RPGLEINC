@@ -15,8 +15,9 @@
 // This is kept in a separate service program to avoid
 //   circular dependencies. This should not bind in
 //   any other service programs.
-dcl-pr insertSingleLineOfGeneratedCode ;
+dcl-pr insertSingleLineOfGeneratedCode;
   code like(t_lineOfCode.code) const;
+  line like(t_lineOfCode.line) options(*nopass) const;
 end-pr;
 
 // Given a single line of code, determine if it is fixed format.
