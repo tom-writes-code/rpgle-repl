@@ -23,4 +23,5 @@ strpgmexp pgmlvl(*current)
   export symbol(fetchSessionControlStatement)
   export symbol(storeUserControlStatementDefault)
   export symbol(storeSessionControlStatement)
+  export symbol(stripComments)
 endpgmexp

@@ -173,3 +173,10 @@ end-pr;
 dcl-pr storeSessionControlStatement;
   controlStatement likeds(t_controlStatement) const;
 end-pr;
+
+// strip any comments from a line of code, and pass it back
+// if execSql is on, then we will also treat -- as a comment
+dcl-pr stripComments likeds(t_lineOfCode);
+  lineOfCode likeds(t_lineOfCode) value;
+  execSql ind const;
+end-pr;

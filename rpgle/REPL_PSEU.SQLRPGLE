@@ -766,3 +766,86 @@ dcl-proc storeSessionControlStatement export;
 end-proc;
 
 //-----------------------------------------------------------------------
+
+dcl-proc stripComments export;
+  dcl-pi *n likeds(t_lineOfCode);
+    lineOfCode likeds(t_lineOfCode) value;
+    execSql ind const;
+  end-pi;
+
+  dcl-s code like(t_lineOfCode.code);
+  dcl-s openSlashStar ind static;
+
+  // if we were already a comment, and have no means of closing it, then just
+  // blank out and skip doing anything else.
+  if openSlashStar and %scan('*/': lineOfCode.code) = 0;
+    lineOfCode.code = *blanks;
+    return lineOfCode;
+  endif;
+
+  // we could (terrifyingly) have multiple comments on a single line,
+  // so handle that
+
+  dou %len(%trim(code)) = %len(%trim(lineOfCode.code));
+
+    code = lineOfCode.code;
+
+    // pretty standard comments - could have e.g.
+    // dcl-s i packed(2); // [used for indexing]
+
+    if %scan('//': lineOfCode.code) > 0;
+      lineOfCode.code = %subst(lineOfCode.code: 1: %scan('//': lineOfCode.code) - 1);
+    endif;
+
+    // it's an older code but it checks out
+    // dcl-s i /* i for index, dummy */ packed(2);
+    // /* we love to do 
+    //    some indexing! */
+
+    // if we were already a comment, and are closing it, then strip out
+    // the comment bit
+    if openSlashStar and %scan('*/': lineOfCode.code) > 0;
+      openSlashStar = *off;
+      lineOfCode.code = %subst(lineOfCode.code: %scan('*/': lineOfCode.code) + 2);
+    endif;
+
+    if %scan('/*': lineOfCode.code) > 0;
+      openSlashStar = *on;
+
+      select;
+        // we have a /* line */ with a self-contained comment
+        when %scan('*/': lineOfCode.code) > %scan('/*': lineOfCode.code);
+          openSlashStar = *off;
+          lineOfCode.code = 
+            %subst(lineOfCode.code: 1: %scan('/*': lineOfCode.code) - 1)
+            + %subst(lineOfCode.code: %scan('*/': lineOfCode.code) + 2);
+
+        // we were already a comment */ and /* will be again
+        when %scan('/*': lineOfCode.code) > %scan('*/': lineOfCode.code)
+        and %scan('*/': lineOfCode.code) > 0;
+          lineOfCode.code = 
+            %subst(lineOfCode.code: %scan('*/': lineOfCode.code) + 2)
+            + %subst(lineOfCode.code: 1: %scan('/*': lineOfCode.code) - 1);
+
+        // we only started a comment /*
+        other;
+          lineOfCode.code = %subst(lineOfCode.code: 1: %scan('/*': lineOfCode.code) - 1);
+
+      endsl;
+
+    endif;
+
+    // sql, naturally, can have it's own comment style.
+    // exec sql 
+    //   SELECT name -- this is the name
+    if execSql and %scan('--': lineOfCode.code) > 0;
+      lineOfCode.code = %subst(lineOfCode.code: 1: %scan('--': lineOfCode.code) - 1);
+    endif;
+
+  enddo;
+
+  return lineOfCode;
+
+end-proc;
+
+//-----------------------------------------------------------------------
