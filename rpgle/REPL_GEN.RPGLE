@@ -138,6 +138,12 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
 
   dow fetchLineOfPseudoCode(lineOfCode: replCode);
 
+    lineOfCode = stripComments(
+      lineOfCode: 
+      %scan('exec sql': %lower(%trim(continuousLineOfCode)) + ' ' 
+                        + %lower(lineOfCode.code)) > 0
+    );
+
     if replCode
     and mainlineCode
     and codeIsSubProcedureOrSubRoutine(lineOfCode.code);
