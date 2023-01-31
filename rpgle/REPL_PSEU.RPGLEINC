@@ -180,3 +180,10 @@ dcl-pr stripComments likeds(t_lineOfCode);
   lineOfCode likeds(t_lineOfCode) value;
   execSql ind const;
 end-pr;
+
+dcl-pr @scan packed(5);
+  searchArgument varchar(65535) const;
+  sourceString varchar(65535) value;
+  startPosition packed(5) const options(*omit: *nopass);
+  length packed(5) const options(*omit: *nopass);
+end-pr;
