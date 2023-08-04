@@ -766,3 +766,148 @@ dcl-proc storeSessionControlStatement export;
 end-proc;
 
 //-----------------------------------------------------------------------
+
+dcl-proc stripComments export;
+  dcl-pi *n likeds(t_lineOfCode);
+    lineOfCode likeds(t_lineOfCode) value;
+    execSql ind const;
+  end-pi;
+
+  dcl-s code like(t_lineOfCode.code);
+  dcl-s openSlashStar ind static;
+
+  // if we were already a comment, and have no means of closing it, then just
+  // blank out and skip doing anything else.
+  if openSlashStar and @scan('*/': lineOfCode.code) = 0;
+    lineOfCode.code = *blanks;
+    return lineOfCode;
+  endif;
+
+  // we could (terrifyingly) have multiple comments on a single line,
+  // so handle that
+
+  dou %len(%trim(code)) = %len(%trim(lineOfCode.code));
+
+    code = lineOfCode.code;
+
+    // pretty standard comments - could have e.g.
+    // dcl-s i packed(2); // [used for indexing]
+
+    if @scan('//': lineOfCode.code) > 0;
+      lineOfCode.code = %subst(lineOfCode.code: 1: @scan('//': lineOfCode.code) - 1);
+    endif;
+
+    // it's an older code but it checks out
+    // dcl-s i /* i for index, dummy */ packed(2);
+    // /* we love to do 
+    //    some indexing! */
+
+    // if we were already a comment, and are closing it, then strip out
+    // the comment bit
+    if openSlashStar and @scan('*/': lineOfCode.code) > 0;
+      openSlashStar = *off;
+      lineOfCode.code = %subst(lineOfCode.code: @scan('*/': lineOfCode.code) + 2);
+    endif;
+
+    if @scan('/*': lineOfCode.code) > 0;
+      openSlashStar = *on;
+
+      select;
+        // we have a /* line */ with a self-contained comment
+        when @scan('*/': lineOfCode.code) > @scan('/*': lineOfCode.code);
+          openSlashStar = *off;
+          lineOfCode.code = 
+            %subst(lineOfCode.code: 1: @scan('/*': lineOfCode.code) - 1)
+            + %subst(lineOfCode.code: @scan('*/': lineOfCode.code) + 2);
+
+        // we were already a comment */ and /* will be again
+        when @scan('/*': lineOfCode.code) > @scan('*/': lineOfCode.code)
+        and @scan('*/': lineOfCode.code) > 0;
+          lineOfCode.code = 
+            %subst(lineOfCode.code: @scan('*/': lineOfCode.code) + 2)
+            + %subst(lineOfCode.code: 1: @scan('/*': lineOfCode.code) - 1);
+
+        // we only started a comment /*
+        other;
+          lineOfCode.code = %subst(lineOfCode.code: 1: @scan('/*': lineOfCode.code) - 1);
+
+      endsl;
+
+    endif;
+
+    // sql, naturally, can have it's own comment style.
+    // exec sql 
+    //   SELECT name -- this is the name
+    if execSql and @scan('--': lineOfCode.code) > 0;
+      lineOfCode.code = %subst(lineOfCode.code: 1: @scan('--': lineOfCode.code) - 1);
+    endif;
+
+  enddo;
+
+  return lineOfCode;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+// An interpretation of %scan() which ignores anything that looks like
+// a string literal, focusing only on the other things.
+
+dcl-proc @scan export;
+  dcl-pi *n packed(5);
+    searchArgument varchar(65535) const;
+    sourceString varchar(65535) value;
+    startPosition packed(5) const options(*omit: *nopass);
+    length packed(5) const options(*omit: *nopass);
+  end-pi;
+
+  dcl-s searchFrom packed(5);
+  dcl-s searchFor packed(5);
+  dcl-s character packed(5);
+  dcl-s isStringLiteral ind;
+
+  searchFrom = 1;
+  searchFor = %len(sourceString);
+
+  if %parms() >= %parmnum(startPosition) and %addr(startPosition) <> *null;
+    searchFrom = startPosition;
+  endif;
+
+  if %parms() >= %parmnum(length) and %addr(length) <> *null
+  and %len(sourceString) > length;
+    searchFor = length;
+  endif;
+
+  // %scan('D': 'Dr. Doolittle': 2: 3)
+  // for character = 1 to (3 + 2 - 1)
+  // for character = 1 to 4
+  // e.g. look for 'D' in 'Dr. D'
+  // but we have an extra check saying that if we found it earlier, don't use it
+  // we have to read from the start to ensure we're catching any relevant 
+  // string literal markers
+
+  for character = 1 to (searchFor + searchFrom - %len(searchArgument));
+
+    if %subst(sourceString: character: 1) = '''';
+      isStringLiteral = not isStringLiteral;
+    endif;
+
+    if isStringLiteral;
+      iter;
+    endif;
+
+    if character < searchFrom;
+      iter;
+    endif;
+
+    if %subst(sourceString: character: %len(searchArgument)) = searchArgument;
+      return character;
+    endif;
+
+  endfor;
+
+  return 0;
+
+end-proc;
+
+//-----------------------------------------------------------------------
