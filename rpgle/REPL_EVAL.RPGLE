@@ -71,10 +71,15 @@ dcl-proc evaluateLineOfPseudoCode export;
 
       when variable.type = 'indicator';
         insertSingleLineOfGeneratedCode
-          ('replResult_rpgIndicator('
-           + %char(line) + ':'
-           + '''' + %trim(%scanrpl('.':'_':variable.name)) + ''':'
-           + %trim(variable.name) + ');');
+          ('replResult_rpgIndicator(');
+        insertSingleLineOfGeneratedCode
+          ('  ' + %char(line) + ':');
+        insertSingleLineOfGeneratedCode
+          ('  ' + '''' + %trim(%scanrpl('.':'_':variable.name)) + ''':');
+        insertSingleLineOfGeneratedCode
+          ('  ' + %trim(variable.name));
+        insertSingleLineOfGeneratedCode
+          (');');
 
       // not an array, maybe a data structure
       when variable.arraySize <= 1;
@@ -88,7 +93,9 @@ dcl-proc evaluateLineOfPseudoCode export;
         insertSingleLineOfGeneratedCode
           ('  ' + '''' + %trim(variableName) + ''':');
         insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName) + ');');
+          ('  ' + %trim(variableName));
+        insertSingleLineOfGeneratedCode
+          (');');
 
       // array, and we're evaluating a specific value
       when (variable.arraySize > 1)
@@ -103,7 +110,9 @@ dcl-proc evaluateLineOfPseudoCode export;
         insertSingleLineOfGeneratedCode
           ('  ' + '''' + %trim(variableName) + ''':');
         insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName) + ');');
+          ('  ' + %trim(variableName));
+        insertSingleLineOfGeneratedCode
+          (');');
 
       // array, and we're evaluating all values
       when (variable.arraySize > 1)
@@ -118,7 +127,9 @@ dcl-proc evaluateLineOfPseudoCode export;
         insertSingleLineOfGeneratedCode
           ('  ' + '''' + %trim(variableName) + ''':');
         insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName) + ');');
+          ('  ' + %trim(variableName));
+        insertSingleLineOfGeneratedCode
+          (');');
 
     endsl;
 
