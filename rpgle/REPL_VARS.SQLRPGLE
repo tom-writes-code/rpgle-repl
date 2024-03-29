@@ -1206,7 +1206,6 @@ dcl-proc fetchVariableExpectedValueFromReplEqualsStatement export;
     code = %trim(%subst(code: 1: %len(code) - 1));
     code = %trim(%subst(code: 12));
     code = %trim(%subst(code: 1: %scanr(':': code) - 1));
-    code = %scanrpl('''' : '''''' : code);
 
     return code;
 
