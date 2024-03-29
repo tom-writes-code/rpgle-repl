@@ -10,7 +10,8 @@ CREATE OR REPLACE TABLE replrslt
   line_number FOR COLUMN lineNumber DEC(4,0) NOT NULL,
   result_number FOR COLUMN resultNum DEC(4,0) NOT NULL,
   result_description FOR COLUMN resultDes VARCHAR(1000) NOT NULL,
-  loop_count DEC(5,0) NOT NULL DEFAULT 1
+  loop_count DEC(5,0) NOT NULL DEFAULT 1,
+  result_type FOR COLUMN resultType CHAR(32) NOT NULL DEFAULT 'EVAL'
 
 )
 RCDFMT replrsltf;
@@ -29,6 +30,7 @@ LABEL ON COLUMN replrslt
   line_number TEXT IS 'Line Number',
   result_number TEXT IS 'Result Number',
   result_description TEXT IS 'Result Description',
-  loop_count TEXT IS 'Occurrences of Result'
+  loop_count TEXT IS 'Occurrences of Result',
+  result_type TEXT IS 'Result Type'
 );
 

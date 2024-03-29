@@ -107,20 +107,46 @@ dcl-proc replResult_rpgIndicator export;
     repl_line like(t_lineOfCode.line) const;
     repl_name char(70) const;
     repl_i ind const;
+    repl_result_type char(20) const options(*nopass);
+    repl_expected ind const options(*nopass);
   end-pi;
+  dcl-s repl_result_type_wk char(20) inz('EVALUATION');
+  dcl-s result_description varchar(1000) inz('');
+
+  if repl_i;
+    result_description = %trim(repl_name) + ' = true';
+  else;
+    result_description = %trim(repl_name) + ' = false';
+  endif;  
+
+  if %parms() >= %parmnum(repl_result_type);
+    repl_result_type_wk = repl_result_type;
+    if %parms() >= %parmnum(repl_expected);
+      if repl_i = repl_expected;
+        repl_result_type_wk = 'TEST-SUCCESS';
+        result_description = 'Success, ' + result_description;
+      else;
+        repl_result_type_wk = 'TEST-FAILURE';
+        result_description = 'Failure, ' + result_description;
+        if repl_expected;
+          result_description = result_description + ', expected true';
+        else;
+          result_description = result_description + ', expected false';
+        endif;
+      endif;
+    endif;
+  endif;
 
   exec sql
     INSERT INTO replrslt
-      (line_number, result_number, result_description)
+      (line_number, result_number, result_description, result_type)
       (SELECT :repl_line,
               COALESCE(MAX(result_number), 0)+1,
-              TRIM(:repl_name) CONCAT ' = ' CONCAT
-              CASE WHEN :repl_i = 1
-                THEN 'true'
-                ELSE 'false' END
+              :result_description,
+              :repl_result_type_wk  
          FROM replrslt
         WHERE session_id = (QSYS2.JOB_NAME)
-              AND line_number = :repl_line);
+              AND line_number = :repl_line);            
 
 end-proc;
 

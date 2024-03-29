@@ -16,6 +16,10 @@ dcl-c c_setValueStatement 'VAL';
 dcl-c c_loopStatement 'LOP';
 // exec sql
 dcl-c c_sqlStatement 'SQL';
+// replPrint(
+dcl-c c_replPrintStatement 'PRT';
+// replEquals(
+dcl-c c_replEqualsStatement 'EQL';
 
 dcl-s t_triggerType char(3) template;
 
@@ -33,8 +37,11 @@ end-ds;
 //     o c_setValueStatement
 //     o c_loopStatement
 //     o c_sqlStatement
+//     o c_replPrintStatement
+//     o c_replEqualsStatement
 //   o Variable name (not include array element)
 //   o Current Scope
+//   o Expected value (replEquals only)
 // Conditional, Loop, SQL, and Set Value statements
 //   where the variable is of an unknown type can be
 //   evaluated using the existing REPL_HLPR procedures.
@@ -45,6 +52,7 @@ dcl-pr evaluateLineOfPseudoCode;
   triggerType like(t_triggerType) const;
   variableName like(t_variable.name) const;
   scope like(t_variable.scope) const;
+  expectedValue like(t_longLineOfCode) const options(*nopass);
 end-pr;
 
 // Given a complete line of code, determine whether it is a
@@ -91,6 +99,15 @@ end-pr;
 //   o /*
 dcl-pr codeIsComment ind;
   code like(t_lineOfCode.code) const;
+end-pr;
+
+// Given a single line of code, do the opening characters imply that
+//   this is a repl helpers
+// The following characters imply helpers:
+//   o replPrint(
+//   o replEquals(
+dcl-pr codeIsReplHelper ind;
+  code like(t_longLineOfCode) const;
 end-pr;
 
 // Add the result evaluation helpers. This will read through each

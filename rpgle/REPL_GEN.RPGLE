@@ -116,6 +116,7 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
   dcl-s replCode ind inz(*on);
   dcl-ds referenceSource likeds(t_referenceSource);
   dcl-s dsNestingLimit packed(2) inz(1);
+  dcl-s replHelperCodeFoundOnLine ind;
 
   if %parms() >= %parmnum(includeSource);
     replCode = *off;
@@ -135,6 +136,7 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
   endif;
 
   continuousLineOfCode = *blanks;
+  replHelperCodeFoundOnLine = *off;
 
   dow fetchLineOfPseudoCode(lineOfCode: replCode);
 
@@ -151,7 +153,14 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
       setGeneratedSourceObjectReturn();
     endif;
 
-    if replCode;
+    // if the user used replPrint or replEquals (etc.) then don't
+    // paste this in
+    // this might be a multi-line statement, so remember what we had
+    if not replHelperCodeFoundOnLine and codeIsReplHelper(lineOfCode.code);
+      replHelperCodeFoundOnLine = *on;
+    endif;
+
+    if replCode and not replHelperCodeFoundOnLine;
       insertSingleLineOfGeneratedCode(lineOfCode.code: lineOfCode.line);
     endif;
 
@@ -190,6 +199,7 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
     if not endOfFreeFormatLineFound(continuousLineOfCode);
       iter;
     endif;
+
 
     // check for dcl-c
     if constantDefinitionFound(continuousLineOfCode);
@@ -287,18 +297,39 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
     endif;
 
     // look for something we can evaluate
+    // this include replPrint and replEquals
     if freeFormatEvaluationFound(continuousLineOfCode: triggerType);
       if triggerType = c_setValueStatement;
         variable.name
           = fetchVariableNameFromStatement(continuousLineOfCode);
         variable = fetchStoredVariable(variable.name: currentScope);
       endif;
-      evaluateLineOfPseudoCode
-        (lineOfCode.line: triggerType: variable: currentScope);
+      if triggerType = c_replPrintStatement;
+        variable.name
+         = fetchVariableNameFromReplPrintStatement(continuousLineOfCode);
+        variable = fetchStoredVariable(variable.name: currentScope);
+      endif;
+      if triggerType = c_replEqualsStatement;
+        variable.name
+         = fetchVariableNameFromReplEqualsStatement(continuousLineOfCode);
+        variable = fetchStoredVariable(variable.name: currentScope);
+      endif;
+      if triggerType = c_replEqualsStatement;
+        evaluateLineOfPseudoCode
+          (lineOfCode.line: triggerType: variable: currentScope:
+           fetchVariableExpectedValueFromReplEqualsStatement(
+             continuousLineOfCode
+           )
+          );
+      else;
+        evaluateLineOfPseudoCode
+          (lineOfCode.line: triggerType: variable: currentScope);
+      endif;    
     endif;
 
     // reset the line for the next process
     continuousLineOfCode = *blanks;
+    replHelperCodeFoundOnLine = *off;
 
   enddo;
 
@@ -347,6 +378,17 @@ dcl-proc codeIsSubProcedureOrSubRoutine;
   return
      %scan('DCL-PROC': %trim(toUpperCase(code))) > 0
   or %scan('BEGSR': %trim(toUpperCase(code))) > 0;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc processReplHelperCode;
+  dcl-pi *n;
+    code like(t_longLineOfCode) const;
+  end-pi;
+
+
 
 end-proc;
 
