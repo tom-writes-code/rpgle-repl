@@ -1126,6 +1126,100 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
+dcl-proc fetchVariableNameFromReplPrintStatement export;
+  dcl-pi *n like(t_variable.name);
+    code like(t_longLineOfCode) value;
+  end-pi;
+
+  dcl-s variableName like(t_variable.name);
+
+  monitor;
+
+    // cut off the last semicolon
+    // cut off the last brace
+    // cut off replPrint(
+
+    code = %trim(code);    
+    code = %trim(%subst(code: 1: %len(code) - 1));
+    code = %trim(%subst(code: 1: %len(code) - 1));
+    variableName = %trim(%subst(code: 11));
+
+    return variableName;
+
+    on-error;
+
+      return *blanks;
+
+    endmon;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc fetchVariableNameFromReplEqualsStatement export;
+  dcl-pi *n like(t_variable.name);
+    code like(t_longLineOfCode) value;
+  end-pi;
+
+  dcl-s variableName like(t_variable.name);
+
+  monitor;
+
+    // cut off the last semicolon
+    // cut off the last brace
+    // cut off replEquals(
+    // cut off everything up to and including the colon    
+
+    code = %trim(code);    
+    code = %trim(%subst(code: 1: %len(code) - 1));
+    code = %trim(%subst(code: 1: %len(code) - 1));
+    code = %trim(%subst(code: 12));
+    variableName = %trim(%subst(code: %scan(':': code) + 1));
+
+    return variableName;
+
+    on-error;
+
+      return *blanks;
+
+    endmon;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc fetchVariableExpectedValueFromReplEqualsStatement export;
+  dcl-pi *n like(t_longLineOfCode);
+    code like(t_longLineOfCode) value;
+  end-pi;
+
+  monitor;
+
+    // cut off the last semicolon
+    // cut off the last brace
+    // cut off replEquals(
+    // cut off everything after and including the final colon    
+    // turn single quotes into double quotes
+
+    code = %trim(code);    
+    code = %trim(%subst(code: 1: %len(code) - 1));
+    code = %trim(%subst(code: 1: %len(code) - 1));
+    code = %trim(%subst(code: 12));
+    code = %trim(%subst(code: 1: %scanr(':': code) - 1));
+    code = %scanrpl('''' : '''''' : code);
+
+    return code;
+
+    on-error;
+
+      return *blanks;
+
+    endmon;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
 dcl-proc nonZero export;
   dcl-pi *n packed(4);
     number packed(4) const;

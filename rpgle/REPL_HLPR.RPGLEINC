@@ -41,6 +41,8 @@ dcl-pr replResult_rpgIndicator;
   repl_line like(t_lineOfCode.line) const;
   repl_name char(70) const;
   repl_i ind const;
+  repl_result_type char(20) const options(*nopass);
+  repl_expected ind const options(*nopass);
 end-pr;
 
 // Record a custom string

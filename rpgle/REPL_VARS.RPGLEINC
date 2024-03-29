@@ -110,9 +110,27 @@ dcl-pr fetchStoredVariable likeds(t_variable);
 end-pr;
 
 // Given a complete line of code, determine the name of the
-//   variable being evaluated. Remove all array counters.
+//   variable being evaluated. 
 dcl-pr fetchVariableNameFromStatement like(t_variable.name);
   code like(t_longLineOfCode) const;
+end-pr;
+
+// Given a complete line of code, determine the name of the
+//   variable being printed. 
+dcl-pr fetchVariableNameFromReplPrintStatement like(t_variable.name);
+  code like(t_longLineOfCode) value;
+end-pr;
+
+// Given a complete line of code, determine the name of the
+//   variable being checked. 
+dcl-pr fetchVariableNameFromReplEqualsStatement like(t_variable.name);
+  code like(t_longLineOfCode) value;
+end-pr;
+
+// Given a complete line of code, determine the value of the
+//   variable being checked. 
+dcl-pr fetchVariableExpectedValueFromReplEqualsStatement like(t_longLineOfCode);
+  code like(t_longLineOfCode) value;
 end-pr;
 
 // Given a complete line of code such as:
