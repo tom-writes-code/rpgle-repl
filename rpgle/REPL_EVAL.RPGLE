@@ -475,7 +475,7 @@ dcl-proc replResult_evaluate_fld_single export;
     ('    endif;');
   else;
     insertSingleLineOfGeneratedCode
-    ('    result_description += %char(repl_i);');
+    ('    result_description += %trim(%char(repl_i));');
   endif;
     
   insertSingleLineOfGeneratedCode
