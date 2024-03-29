@@ -352,6 +352,8 @@ dcl-proc fetchResultForLineOfCode export;
   dcl-s resultNumber packed(5);
   dcl-s resultTotal packed(5);
 
+  result.resultText = '';
+
   exec sql
     FETCH NEXT FROM replSrc_resultForLine
      INTO :result.resultText, 
