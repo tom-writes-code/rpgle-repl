@@ -114,9 +114,9 @@ dcl-proc replResult_rpgIndicator export;
   dcl-s result_description varchar(1000) inz('');
 
   if repl_i;
-    result_description = %trim(repl_name + ' = true');
+    result_description = %trim(repl_name) + ' = true';
   else;
-    result_description = %trim(repl_name + ' = false');
+    result_description = %trim(repl_name) + ' = false';
   endif;  
 
   if %parms() >= %parmnum(repl_result_type);

@@ -503,7 +503,7 @@ dcl-proc replResult_evaluate_fld_single export;
   insertSingleLineOfGeneratedCode
     ('        '', expected '' + ');
   insertSingleLineOfGeneratedCode
-    ('        %char(repl_expected);');
+    ('        %trim(%char(repl_expected));');
   insertSingleLineOfGeneratedCode
     ('      endif;');
   insertSingleLineOfGeneratedCode
@@ -606,7 +606,7 @@ dcl-proc replResult_evaluate_fld_multiple export;
   insertSingleLineOfGeneratedCode
     ('         repl_result_type_wk:');
   insertSingleLineOfGeneratedCode
-    ('         repl_expected + ''('' + %char(repl_j) + '')''');
+    ('         repl_expected(repl_j)');
   insertSingleLineOfGeneratedCode
     ('      );' );
 
@@ -668,7 +668,7 @@ dcl-proc replResult_evaluate_ds_single export;
       ('    repl_i ' + %trim(variable.definition) + ' const;');
   else;
     insertSingleLineOfGeneratedCode
-      ('    repl_i likeds(' + %trim(variable.name) + ' const;');
+      ('    repl_i likeds(' + %trim(variable.name) + ') const;');
   endif;
   insertSingleLineOfGeneratedCode
     ('    repl_result_type char(20) const options(*nopass);');
@@ -727,7 +727,7 @@ dcl-proc replResult_evaluate_ds_single export;
         insertSingleLineOfGeneratedCode
           ('    %trim(repl_name) + ''.' + %trim(subFieldOnly.name) + ''':');
         insertSingleLineOfGeneratedCode
-          ('    ' + %trim(subField.name));
+          ('    ' + %trim(subField.name) + ':');
         insertSingleLineOfGeneratedCode
           ('    repl_result_type_wk:');
         insertSingleLineOfGeneratedCode
@@ -751,7 +751,7 @@ dcl-proc replResult_evaluate_ds_single export;
         insertSingleLineOfGeneratedCode
           ('    %trim(repl_name) + ''.' + %trim(subFieldOnly.name) + ''':');
         insertSingleLineOfGeneratedCode
-          ('    ' + %trim(subField.name));
+          ('    ' + %trim(subField.name) + ':');
         insertSingleLineOfGeneratedCode
           ('    repl_result_type_wk');
         insertSingleLineOfGeneratedCode
@@ -778,7 +778,7 @@ dcl-proc replResult_evaluate_ds_single export;
         insertSingleLineOfGeneratedCode
           ('    %trim(repl_name) + ''.' + %trim(subFieldOnly.name) + ''':');
         insertSingleLineOfGeneratedCode
-          ('    ' + %trim(subField.name));
+          ('    ' + %trim(subField.name) + ':');
         insertSingleLineOfGeneratedCode
           ('    repl_result_type_wk:');
         insertSingleLineOfGeneratedCode
@@ -802,7 +802,7 @@ dcl-proc replResult_evaluate_ds_single export;
         insertSingleLineOfGeneratedCode
           ('    %trim(repl_name) + ''.' + %trim(subFieldOnly.name) + ''':');
         insertSingleLineOfGeneratedCode
-          ('    ' + %trim(subField.name));
+          ('    ' + %trim(subField.name) + ':');
         insertSingleLineOfGeneratedCode
           ('    repl_result_type_wk');
         insertSingleLineOfGeneratedCode  

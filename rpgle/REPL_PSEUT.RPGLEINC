@@ -9,7 +9,10 @@ dcl-ds t_lineOfCode qualified template;
   line packed(6:0);
   code char(71);
 end-ds;
-dcl-s t_result varchar(1000) template;
+dcl-ds t_result qualified template;
+  resultType char(32);
+  resultText varchar(1000);
+end-ds;
 dcl-s t_longLineOfCode varchar(1000) template;
 
 dcl-ds t_storedSnippet qualified template;

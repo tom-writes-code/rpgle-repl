@@ -4,6 +4,8 @@
                 R HEADER
                                         1  2'repl:sqlrpgle'
                                             COLOR(BLU)
+        51                              1 16'test-set'
+                                            COLOR(BLU)
 
                                         2  2'line'
                                         2  7'code'
@@ -23,8 +25,22 @@
       AN50                                  COLOR(RED)
         50                                  COLOR(GRN)
                   CL_RESULT     52A  O  3 79
-        30                                  COLOR(PNK)
-       N30                                  COLOR(RED)
+      * test success
+        30
+      A 52
+      AN53                                  COLOR(GRN)
+      * test failure
+        30
+      AN52
+      A 53                                  COLOR(RED)   
+      * regular, good code  
+        30
+      AN52
+      AN53                                  COLOR(PNK)
+      * compilation failure
+       N30
+      AN52
+      AN53                                  COLOR(WHT)
                   CL_FULRSLT  1000A  H
 
                 R CODEPAGE                  SFLCTL(CODELINE)

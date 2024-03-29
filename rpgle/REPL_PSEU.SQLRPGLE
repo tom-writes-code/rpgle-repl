@@ -320,11 +320,14 @@ dcl-proc prepareFetchResultForLineOfCode export;
 
   exec sql
     DECLARE replSrc_resultForLine CURSOR FOR
-     SELECT result_description, loop_count, result_number,
+     SELECT result_description, 
+            loop_count, 
+            result_number,
             (SELECT COALESCE(MAX(result_number), 0)
                FROM replrslt
               WHERE session_id = (QSYS2.JOB_NAME)
-                    AND line_number = :line)
+                    AND line_number = :line),
+            result_type
        FROM replrslt
       WHERE session_id = (QSYS2.JOB_NAME)
             AND line_number = :line
@@ -342,7 +345,7 @@ end-proc;
 
 dcl-proc fetchResultForLineOfCode export;
   dcl-pi *n ind;
-    result like(t_result);
+    result likeds(t_result);
   end-pi;
 
   dcl-s loopCount packed(5);
@@ -351,19 +354,25 @@ dcl-proc fetchResultForLineOfCode export;
 
   exec sql
     FETCH NEXT FROM replSrc_resultForLine
-     INTO :result, :loopCount, :resultNumber, :resultTotal;
+     INTO :result.resultText, 
+          :loopCount, 
+          :resultNumber, 
+          :resultTotal,
+          :result.resultType;
 
   if sqlstt = '00000'
-  and result = 'Loop executed';
-    result = %trim(result) + ' ' + %char(loopCount) + ' time';
+  and result.resultText = 'Loop executed';
+    result.resultText 
+      = %trim(result.resultText) + ' ' + %char(loopCount) + ' time';
     if loopCount > 1;
-      result = %trim(result) + 's';
+      result.resultText = %trim(result.resultText) + 's';
     endif;
   endif;
 
   if sqlstt = '00000'
   and resultTotal > 1;
-    result = %trim(%char(resultNumber)) + ': ' + %trim(result);
+    result.resultText 
+      = %trim(%char(resultNumber)) + ': ' + %trim(result.resultText);
   endif;
 
   return (sqlstt = '00000');

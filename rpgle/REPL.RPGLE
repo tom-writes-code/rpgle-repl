@@ -85,6 +85,10 @@ dcl-ds dspinds qualified;
 
   isRulerLine ind pos(50);
 
+  isTestProgram ind pos(51);
+  isTestSuccess ind pos(52);
+  isTestFailure ind pos(53);
+
 end-ds;
 
 dcl-s s2rrn packed(4);
@@ -402,7 +406,7 @@ dcl-proc addStoredCodeToCodePageScreen;
   dcl-s i like(t_lineOfCode.line);
   dcl-s currentCodeLineCount like(t_lineOfCode.line);
   dcl-s blankLineCount like(t_lineOfCode.line);
-  dcl-s result like(t_result);
+  dcl-ds result likeds(t_result);
 
   prepareFetchLinesOfPseudoCode();
 
@@ -411,8 +415,18 @@ dcl-proc addStoredCodeToCodePageScreen;
   blankLineCount = 0;
 
   // Put all the stored code on screen
+  dspinds.isTestProgram = *off;
 
   dow fetchLineOfPseudoCode(lineOfCode: *on);
+
+    if not dspinds.isTestProgram;
+      if (
+        %len(%trim(lineOfCode.code)) >= 11
+        and %lower(%subst(%trim(lineOfCode.code): 1: 11)) = 'replequals('
+      );
+        dspinds.isTestProgram = *on;
+      endif;
+    endif;
 
     currentCodeLineCount += 1;
     if currentCodeLineCount = showRuler.beforeLine
@@ -431,8 +445,8 @@ dcl-proc addStoredCodeToCodePageScreen;
 
     prepareFetchResultForLineOfCode(lineOfCode.line);
     if fetchResultForLineOfCode(result);
-      cl_result = result;
-      cl_fulrslt = result;
+      cl_result = result.resultText;
+      cl_fulrslt = result.resultText;
     else;
       cl_result = *blanks;
       cl_fulrslt = *blanks;
@@ -446,14 +460,31 @@ dcl-proc addStoredCodeToCodePageScreen;
       blankLineCount = 0;
     endif;
 
+    dspinds.isTestSuccess = *off;
+    dspinds.isTestFailure = *off;
+    if result.resultType = 'TEST-SUCCESS';
+      dspinds.isTestSuccess = *on;
+    elseif result.resultType = 'TEST-FAILURE';
+      dspinds.isTestFailure = *on;
+    endif;
+
     s2rrn += 1;
     write codeline;
 
     dow fetchResultForLineOfCode(result);
       cl_lineNum = ' +';
       cl_code = *blanks;
-      cl_result = result;
-      cl_fulrslt = result;
+      cl_result = result.resultText;
+      cl_fulrslt = result.resultText;
+      
+      dspinds.isTestSuccess = *off;
+      dspinds.isTestFailure = *off;
+      if result.resultType = 'TEST-SUCCESS';
+        dspinds.isTestSuccess = *on;
+      elseif result.resultType = 'TEST-FAILURE';
+        dspinds.isTestFailure = *on;
+      endif;
+      
       s2rrn += 1;
       write codeline;
     enddo;
