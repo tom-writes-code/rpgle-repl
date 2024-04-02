@@ -447,10 +447,12 @@ dcl-proc replResult_evaluate_fld_single export;
 
   insertSingleLineOfGeneratedCode
     ('    repl_result_type char(20) const options(*nopass);');
+  insertSingleLineOfGeneratedCode 
+    ('    repl_expected ');
+  insertSingleLineOfGeneratedCode 
+    ('     ' + %trim(variable.definition));
   insertSingleLineOfGeneratedCode
-    ('    repl_expected ' 
-               + %trim(variable.definition) 
-               + ' const options(*nopass);');
+    ('      const options(*nopass);');
 
   insertSingleLineOfGeneratedCode
     ('  end-pi;');
