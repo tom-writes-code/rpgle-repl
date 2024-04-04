@@ -108,10 +108,13 @@ dcl-proc evaluateLineOfPseudoCode export;
       // not an array, maybe a data structure
       when variable.arraySize <= 1;
         insertSingleLineOfGeneratedCode
-          ('repl_'
-              + %trim(variable.scope) + '_'
-              + %trim(%scanrpl('.':'_':%char(variable.id)))
-              + '_single(');
+          ('repl_...');
+        insertSingleLineOfGeneratedCode
+          (%trim(variable.scope) + '_...');
+        insertSingleLineOfGeneratedCode
+          (%trim(%scanrpl('.':'_':%char(variable.id))) + '...');
+        insertSingleLineOfGeneratedCode
+          ('_single(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
         insertSingleLineOfGeneratedCode
@@ -135,10 +138,13 @@ dcl-proc evaluateLineOfPseudoCode export;
       when (variable.arraySize > 1)
       and arrayElement <> 0;
         insertSingleLineOfGeneratedCode
-          ('repl_'
-              + %trim(variable.scope) + '_'
-              + %trim(%scanrpl('.':'_':%char(variable.id)))
-              + '_single(');
+          ('repl_');
+        insertSingleLineOfGeneratedCode
+          (%trim(variable.scope) + '_');
+        insertSingleLineOfGeneratedCode
+          (%trim(%scanrpl('.':'_':%char(variable.id))));
+        insertSingleLineOfGeneratedCode
+          ('_single(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
         insertSingleLineOfGeneratedCode
@@ -565,8 +571,10 @@ dcl-proc replResult_evaluate_fld_multiple export;
     ('      dim(' + %trim(%char(variable.arraySize)) + ') const;');
   insertSingleLineOfGeneratedCode
     ('    repl_result_type char(20) const options(*nopass);');
-  insertSingleLineOfGeneratedCode
-    ('    repl_expected ' + %trim(variable.definition));
+  insertSingleLineOfGeneratedCode 
+    ('    repl_expected ');
+  insertSingleLineOfGeneratedCode 
+    ('     ' + %trim(variable.definition));
   insertSingleLineOfGeneratedCode
     ('      dim(' + %trim(%char(variable.arraySize)) 
                   + ') const options(*nopass);');
@@ -675,15 +683,19 @@ dcl-proc replResult_evaluate_ds_single export;
   insertSingleLineOfGeneratedCode
     ('    repl_result_type char(20) const options(*nopass);');
   if variable.definition <> *blanks;
-    insertSingleLineOfGeneratedCode
-      ('    repl_expected ' 
-            + %trim(variable.definition) 
-            + ' const options(*nopass);');
+     insertSingleLineOfGeneratedCode 
+       ('    repl_expected ');
+     insertSingleLineOfGeneratedCode 
+       ('     ' + %trim(variable.definition));
+     insertSingleLineOfGeneratedCode
+       ('      const options(*nopass);');
   else;
+    insertSingleLineOfGeneratedCode 
+      ('    repl_expected likeds(');
+    insertSingleLineOfGeneratedCode 
+      ('     ' + %trim(variable.name));
     insertSingleLineOfGeneratedCode
-      ('    repl_expected likeds(' 
-            + %trim(variable.name) 
-            + ') const options(*nopass);');
+      ('      ) const options(*nopass);');
   endif;
   insertSingleLineOfGeneratedCode
     ('  end-pi;');
@@ -855,17 +867,23 @@ dcl-proc replResult_evaluate_ds_multiple export;
   insertSingleLineOfGeneratedCode
     ('    repl_result_type char(20) const options(*nopass);');
   if variable.definition <> *blanks;
+    insertSingleLineOfGeneratedCode 
+      ('    repl_expected ');
+    insertSingleLineOfGeneratedCode 
+      ('     ' + %trim(variable.definition));
     insertSingleLineOfGeneratedCode
-      ('    repl_expected ' + %trim(variable.definition));
+      ('      dim(' + %trim(%char(variable.arraySize)) + ')');
     insertSingleLineOfGeneratedCode
-      ('      dim(' + %trim(%char(variable.arraySize)) 
-                    + ') const options(*nopass);');
+      ('      const options(*nopass);');
   else;
     insertSingleLineOfGeneratedCode
-      ('    repl_expected likeds(' + %trim(variable.name) + ')');
-    insertSingleLineOfGeneratedCode  
-      ('      dim(' + %trim(%char(variable.arraySize)) 
-                    + ') const options(*nopass);');
+      ('    repl_expected likeds(');
+    insertSingleLineOfGeneratedCode 
+      ('     ' + %trim(variable.name));
+    insertSingleLineOfGeneratedCode
+      ('      dim(' + %trim(%char(variable.arraySize)) + ')');
+    insertSingleLineOfGeneratedCode
+      ('      const options(*nopass);');
   endif;
 
   insertSingleLineOfGeneratedCode
