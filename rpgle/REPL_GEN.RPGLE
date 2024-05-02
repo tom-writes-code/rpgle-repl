@@ -101,8 +101,8 @@ end-proc;
 
 dcl-proc addPseudoCodeToGeneratedSourceObject;
   dcl-pi *n;
-    includeSource likeds(t_referenceSource) options(*nopass);
-    piCurrentScope like(t_variable.scope) options(*nopass);
+    sourceLocation likeds(t_sourceLocation) const options(*nopass);
+    piCurrentScope like(t_variable.scope) const options(*nopass);
   end-pi;
 
   dcl-ds lineOfCode likeds(t_lineOfCode);
@@ -114,19 +114,24 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
   dcl-s currentScope like(t_variable.scope);
   dcl-s isProcedureInterface ind inz(*off);
   dcl-s replCode ind inz(*on);
-  dcl-ds referenceSource likeds(t_referenceSource);
+  dcl-ds referenceSource likeds(t_sourceLocation);
   dcl-s dsNestingLimit packed(2) inz(1);
   dcl-s replHelperCodeFoundOnLine ind;
 
-  if %parms() >= %parmnum(includeSource);
+  if %parms() >= %parmnum(sourceLocation)
+  and not sourceLocation.isUserDirected;
     replCode = *off;
   endif;
 
   if replCode;
     insertSingleLineOfGeneratedCode(*blanks);
-    prepareFetchLinesOfPseudoCode();
+    if %parms() >= %parmnum(sourceLocation);
+      prepareFetchLinesOfPseudoCode(sourceLocation);
+    else;
+      prepareFetchLinesOfPseudoCode();
+    endif;  
   else;
-    prepareFetchLinesOfPseudoCode(includeSource);
+    prepareFetchLinesOfPseudoCode(sourceLocation);
   endif;
 
   if %parms() >= %parmnum(piCurrentScope);
@@ -185,8 +190,8 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
       continuousLineOfCode = *blanks;
       // our recursive call will have ruined us. Pick up where we left off
       // unless we're back to mainline code, in which case we're there.
-      if %parms() >= %parmnum(includeSource);
-        prepareFetchLinesOfPseudoCode(includeSource: lineOfCode.line);
+      if %parms() >= %parmnum(sourceLocation);
+        prepareFetchLinesOfPseudoCode(sourceLocation: lineOfCode.line);
       endif;
       iter;
     endif;

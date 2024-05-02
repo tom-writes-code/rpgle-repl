@@ -5,6 +5,8 @@
 /EndIf
 /Define REPL_GEN
 
+/include qrpgleref,repl_pseut
+
 // Using the pseudo code stored in the repl_pseudo_source_code table,
 //   generate the required repl source object.
 // This combines several discrete tasks:

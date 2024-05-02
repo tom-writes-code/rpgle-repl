@@ -433,9 +433,9 @@ dcl-proc replResult_evaluate_fld_single export;
   insertSingleLineOfGeneratedCode
     ('dcl-proc repl_...');
   insertSingleLineOfGeneratedCode  
-    (          %trim(variable.scope) + '_...');
+    ('   ' + %lower(%trim(variable.scope)) + '_...');
   insertSingleLineOfGeneratedCode
-    (          %trim(%scanrpl('.':'_':%char(variable.id))) + '_single;');
+    ('   ' + %lower(%trim(%scanrpl('.':'_':%char(variable.id)))) + '_single;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -556,9 +556,9 @@ dcl-proc replResult_evaluate_fld_multiple export;
   insertSingleLineOfGeneratedCode
     ('dcl-proc repl_...');
   insertSingleLineOfGeneratedCode
-    (          %trim(variable.scope) + '_...');
+    ('   ' + %lower(%trim(variable.scope)) + '_...');
   insertSingleLineOfGeneratedCode
-    (          %trim(%scanrpl('.':'_':%char(variable.id))) + '_multiple;');
+    ('   ' + %lower(%trim(%scanrpl('.':'_':%char(variable.id)))) + '_multiple;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -664,9 +664,9 @@ dcl-proc replResult_evaluate_ds_single export;
   insertSingleLineOfGeneratedCode
     ('dcl-proc repl_...');
   insertSingleLineOfGeneratedCode  
-    (          %trim(variable.scope) + '_...');
+    ('   ' + %lower(%trim(variable.scope)) + '_...');
   insertSingleLineOfGeneratedCode  
-    (          %trim(%scanrpl('.':'_':%char(variable.id))) + '_single;');
+    ('   ' + %lower(%trim(%scanrpl('.':'_':%char(variable.id)))) + '_single;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -782,9 +782,9 @@ dcl-proc replResult_evaluate_ds_single export;
         insertSingleLineOfGeneratedCode
           ('  repl_...');
         insertSingleLineOfGeneratedCode
-          (  %trim(variable.scope) + '_...');
+          ('  ' + %trim(variable.scope) + '_...');
         insertSingleLineOfGeneratedCode
-          (  %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
+          ('  ' + %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
         insertSingleLineOfGeneratedCode
           ('  multiple(');
         insertSingleLineOfGeneratedCode
@@ -806,9 +806,9 @@ dcl-proc replResult_evaluate_ds_single export;
         insertSingleLineOfGeneratedCode
           ('  repl_...');
         insertSingleLineOfGeneratedCode
-          (  %trim(variable.scope) + '_...');
+          ('  ' + %trim(variable.scope) + '_...');
         insertSingleLineOfGeneratedCode
-          (  %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
+          ('  ' + %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
         insertSingleLineOfGeneratedCode
           ('  multiple(');
         insertSingleLineOfGeneratedCode
@@ -844,9 +844,9 @@ dcl-proc replResult_evaluate_ds_multiple export;
   insertSingleLineOfGeneratedCode
     ('dcl-proc repl_...');
   insertSingleLineOfGeneratedCode  
-    (          %trim(variable.scope) + '_...');
+    ('   ' + %lower(%trim(variable.scope)) + '_...');
   insertSingleLineOfGeneratedCode  
-    (          %trim(%scanrpl('.':'_':%char(variable.id))) + '_multiple;');
+    ('   ' + %lower(%trim(%scanrpl('.':'_':%char(variable.id)))) + '_multiple;');
   insertSingleLineOfGeneratedCode
     ('  dcl-pi *n;');
   insertSingleLineOfGeneratedCode
@@ -966,11 +966,11 @@ end-proc;
 //-----------------------------------------------------------------------
 
 dcl-proc separateReferenceSource export;
-  dcl-pi *n likeds(t_referenceSource);
+  dcl-pi *n likeds(t_sourceLocation);
     code like(t_lineOfCode.code) value;
   end-pi;
 
-  dcl-ds referenceSource likeds(t_referenceSource);
+  dcl-ds referenceSource likeds(t_sourceLocation);
 
   // get rid of trailing / leading blanks
   code = %trim(toUpperCase(code));
@@ -1013,9 +1013,9 @@ end-proc;
 //-----------------------------------------------------------------------
 
 dcl-proc findMyMember export;
-  dcl-pi *n like(t_referenceSource.library);
-    piFile like(t_referenceSource.file) const;
-    piMember like(t_referenceSource.member) const;
+  dcl-pi *n like(t_sourceLocation.library);
+    piFile like(t_sourceLocation.file) const;
+    piMember like(t_sourceLocation.member) const;
   end-pi;
 
   dcl-pr memberFinder extpgm('QUSRMBRD');

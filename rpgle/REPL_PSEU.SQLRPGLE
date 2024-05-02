@@ -106,14 +106,25 @@ end-proc;
 
 dcl-proc prepareFetchLinesOfPseudoCode export;
   dcl-pi *n;
-    sourceFile likeds(t_referenceSource) const options(*nopass);
+    iSourceLocation likeds(t_sourceLocation) const options(*nopass);
     startingLine like(t_lineOfCode.line) const options(*nopass);
   end-pi;
 
   dcl-s alreadyProcessed ind;
   dcl-s from like(t_lineOfCode.line);
+  dcl-ds sourceLocation likeds(t_sourceLocation);
 
-  if %parms() >= %parmnum(sourceFile);
+  if %parms() >= %parmnum(iSourceLocation);
+    eval-corr sourceLocation = iSourceLocation;  
+  endif;
+
+  // if we've specified somewhere other than the default location
+  if %parms() >= %parmnum(iSourceLocation)
+  and not (
+    %upper(sourceLocation.library) = '*LIBL'
+    and %upper(sourceLocation.file) = 'REPLSRC'
+    and %upper(sourceLocation.member) = 'REPLSRC'  
+  );
 
     monitor;
       runCommand('DLTOVR FILE(REPLREFSRC)');
@@ -134,9 +145,9 @@ dcl-proc prepareFetchLinesOfPseudoCode export;
     endif;
 
     runCommand('OVRDBF FILE(REPLREFSRC) TOFILE(&1/&2) MBR(&3)':
-               sourceFile.library:
-               sourceFile.file:
-               sourceFile.member);
+               sourceLocation.library:
+               sourceLocation.file:
+               sourceLocation.member);
 
     exec sql
       DECLARE replReference_linesofcode CURSOR FOR
@@ -154,7 +165,13 @@ dcl-proc prepareFetchLinesOfPseudoCode export;
       DECLARE replPseudo_linesofcode CURSOR FOR
        SELECT line_number, code
          FROM replsrc AS withBlanks
-        WHERE session_id = (QSYS2.JOB_NAME)
+        WHERE ((:sourceLocation.snippetName = '' 
+                AND session_id = (QSYS2.JOB_NAME)
+               ) 
+               OR (:sourceLocation.snippetName <> '' 
+                   AND save_name = :sourceLocation.snippetName
+               )
+              )
               AND source_type = :c_mainline_code
               AND line_number
                    <= (SELECT COALESCE(MAX(line_number), 0)
@@ -321,6 +338,7 @@ dcl-proc prepareFetchResultForLineOfCode export;
   exec sql
     DECLARE replSrc_resultForLine CURSOR FOR
      SELECT result_description, 
+            line_number,
             loop_count, 
             result_number,
             (SELECT COALESCE(MAX(result_number), 0)
@@ -343,6 +361,36 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
+dcl-proc prepareFetchResultForAllCode export;
+  dcl-pi *n;
+    externalSessionId varchar(28) const;
+  end-pi;
+
+  exec sql
+    DECLARE replSrc_resultForAllLines CURSOR FOR
+     SELECT result_description, 
+            line_number,
+            loop_count, 
+            result_number,
+            (SELECT COALESCE(MAX(result_number), 0)
+               FROM replrslt
+              WHERE external_session_id = :externalSessionId
+            ),
+            result_type
+       FROM replrslt
+      WHERE external_session_id = :externalSessionId
+      ORDER BY line_number, result_number;
+
+  exec sql
+    CLOSE replSrc_resultForAllLines;
+
+  exec sql
+    OPEN replSrc_resultForAllLines;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
 dcl-proc fetchResultForLineOfCode export;
   dcl-pi *n ind;
     result likeds(t_result);
@@ -357,6 +405,48 @@ dcl-proc fetchResultForLineOfCode export;
   exec sql
     FETCH NEXT FROM replSrc_resultForLine
      INTO :result.resultText, 
+          :result.lineNumber,
+          :loopCount, 
+          :resultNumber, 
+          :resultTotal,
+          :result.resultType;
+
+  if sqlstt = '00000'
+  and result.resultText = 'Loop executed';
+    result.resultText 
+      = %trim(result.resultText) + ' ' + %char(loopCount) + ' time';
+    if loopCount > 1;
+      result.resultText = %trim(result.resultText) + 's';
+    endif;
+  endif;
+
+  if sqlstt = '00000'
+  and resultTotal > 1;
+    result.resultText 
+      = %trim(%char(resultNumber)) + ': ' + %trim(result.resultText);
+  endif;
+
+  return (sqlstt = '00000');
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc fetchResultForAllLinesOfCode export;
+  dcl-pi *n ind;
+    result likeds(t_result);
+  end-pi;
+
+  dcl-s loopCount packed(5);
+  dcl-s resultNumber packed(5);
+  dcl-s resultTotal packed(5);
+
+  result.resultText = '';
+
+  exec sql
+    FETCH NEXT FROM replSrc_resultForAllLines
+     INTO :result.resultText, 
+          :result.lineNumber,
           :loopCount, 
           :resultNumber, 
           :resultTotal,
