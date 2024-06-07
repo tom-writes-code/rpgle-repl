@@ -29,7 +29,8 @@ dcl-proc evaluateLineOfPseudoCode export;
 
   unarrayedName = variableName;
 
-  dow %scan('(': unarrayedName) > 0;
+  // it's not an array if it's a BIF
+  dow %scan('(': unarrayedName) > 0 and %scan('%': unarrayedName) = 0;
     unarrayedName =
       %subst(unarrayedName: 1: %scan('(': unarrayedName) - 1)
       + %subst(unarrayedName: %scan(')': unarrayedName) + 1);
@@ -78,12 +79,12 @@ dcl-proc evaluateLineOfPseudoCode export;
     c_setValueStatement: 
     c_replPrintStatement: 
     c_replEqualsStatement
-  )
-  and (variable.name <> *blanks and variable.type <> *blanks);
+  );
 
     select;
 
-      when variable.type = 'indicator';
+      when variable.type = 'indicator' 
+      and (variable.name <> *blanks and variable.type <> *blanks);
         insertSingleLineOfGeneratedCode
           ('replResult_rpgIndicator(');
         insertSingleLineOfGeneratedCode
@@ -106,7 +107,8 @@ dcl-proc evaluateLineOfPseudoCode export;
           (');');
 
       // not an array, maybe a data structure
-      when variable.arraySize <= 1;
+      when variable.arraySize <= 1 
+      and (variable.name <> *blanks and variable.type <> *blanks);
         insertSingleLineOfGeneratedCode
           ('repl_...');
         insertSingleLineOfGeneratedCode
@@ -136,7 +138,8 @@ dcl-proc evaluateLineOfPseudoCode export;
 
       // array, and we're evaluating a specific value
       when (variable.arraySize > 1)
-      and arrayElement <> 0;
+      and arrayElement <> 0
+      and (variable.name <> *blanks and variable.type <> *blanks);
         insertSingleLineOfGeneratedCode
           ('repl_');
         insertSingleLineOfGeneratedCode
@@ -166,7 +169,8 @@ dcl-proc evaluateLineOfPseudoCode export;
 
       // array, and we're evaluating all values
       when (variable.arraySize > 1)
-      and arrayElement = 0;
+      and arrayElement = 0
+      and (variable.name <> *blanks and variable.type <> *blanks);
         insertSingleLineOfGeneratedCode
           ('repl_'
               + %trim(variable.scope) + '_'
@@ -194,6 +198,34 @@ dcl-proc evaluateLineOfPseudoCode export;
         endif;  
         insertSingleLineOfGeneratedCode
           (');');
+
+      // didn't find a dedicated helper? try the generic ones!
+      other;    
+        if triggerType = c_replPrintStatement;
+          insertSingleLineOfGeneratedCode
+            ('replResult_replPrint(');
+        endif;
+        if triggerType = c_replEqualsStatement;
+          insertSingleLineOfGeneratedCode
+            ('replResult_replEquals(');
+        endif;  
+
+        insertSingleLineOfGeneratedCode
+          ('  ' + %char(line) + ':');
+
+        if triggerType = c_replEqualsStatement;
+          insertSingleLineOfGeneratedCode
+            ('  ' + '''' + %scanrpl('''': '': %trim(variableName)) + ''':');
+          insertSingleLineOfGeneratedCode
+            ('  ' + expectedValue + ':');
+        endif;  
+
+        insertSingleLineOfGeneratedCode
+          ('  ' + %trim(variableName));
+
+        insertSingleLineOfGeneratedCode
+          (');');
+        
 
     endsl;
 

@@ -5,4 +5,6 @@ strpgmexp pgmlvl(*current)
   export symbol(replHlpr_conditional)
   export symbol(replResult_rpgIndicator)
   export symbol(replResult_recordCustomMessage)
+  export symbol(replResult_replPrint)
+  export symbol(replResult_replEquals)
 endpgmexp
