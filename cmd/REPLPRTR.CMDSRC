@@ -1,0 +1,4 @@
+cmd prompt('repl result printer')
+
+parm kwd(std) type(*char) len(1) prompt('stdout verbosity')
+parm kwd(ses) type(*char) len(28) prompt('session id')

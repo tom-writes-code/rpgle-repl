@@ -1,0 +1,12 @@
+cmd prompt('repl wrapper')
+
+parm kwd(lib) type(*char) len(10) prompt('source library') +
+  dft('*LIBL')
+parm kwd(fil) type(*char) len(10) prompt('source file') +
+  dft('REPLSRC')
+parm kwd(mbr) type(*char) len(10) prompt('source member') +
+  dft('REPLSRC')
+parm kwd(snp) type(*char) len(20) prompt('saved snippet')
+parm kwd(std) type(*char) len(1) prompt('stdout verbosity')
+parm kwd(ses) type(*char) len(28) prompt('session id')
+ 

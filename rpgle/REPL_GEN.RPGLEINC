@@ -5,6 +5,8 @@
 /EndIf
 /Define REPL_GEN
 
+/include qrpgleref,repl_pseut
+
 // Using the pseudo code stored in the repl_pseudo_source_code table,
 //   generate the required repl source object.
 // This combines several discrete tasks:
@@ -15,6 +17,8 @@
 //   o Add pseudo code to the repl source object, storing
 //      details of the variables as we go
 //   o Create the repl helper procedures
-dcl-pr createGeneratedSourceObject end-pr;
+dcl-pr createGeneratedSourceObject;
+  sourceLocation likeds(t_sourceLocation) const options(*nopass);
+end-pr;
 
 dcl-pr refreshGeneratedSourceObject end-pr;

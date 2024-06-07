@@ -5,14 +5,25 @@
 /EndIf
 /Define REPL_PSEUT
 
+dcl-ds t_sourceLocation qualified template;
+  isUserDirected ind inz(*off);
+  library char(10) inz('*LIBL');
+  file char(10) inz('REPLSRC');
+  member char(10) inz('REPLSRC');
+  snippetName char(20);
+end-ds;
+
 dcl-ds t_lineOfCode qualified template;
   line packed(6:0);
   code char(71);
 end-ds;
+
 dcl-ds t_result qualified template;
   resultType char(32);
   resultText varchar(1000);
+  lineNumber zoned(6);
 end-ds;
+
 dcl-s t_longLineOfCode varchar(1000) template;
 
 dcl-ds t_storedSnippet qualified template;

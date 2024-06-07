@@ -42,7 +42,7 @@ end-pr;
 //   line.
 // The code can be returned with fetchLineOfPseudoCode.
 dcl-pr prepareFetchLinesOfPseudoCode;
-  sourceFile likeds(t_referenceSource) const options(*nopass);
+  sourceFile likeds(t_sourceLocation) const options(*nopass);
   startingLine like(t_lineOfCode.line) const options(*nopass);
 end-pr;
 
@@ -87,10 +87,23 @@ dcl-pr prepareFetchResultForLineOfCode;
   line like(t_lineOfCode.line) const;
 end-pr;
 
+// Prepare a cursor to return all stored results for this session
+// Results can be returned using fetchResultForAllLinesOfCode.
+dcl-pr prepareFetchResultForAllCode;
+  externalSessionId varchar(28) const;
+end-pr;
+
 // Return each of the results for a single line number and this
 //   session in the REPLRSLT table.
 // This must be prepared with prepareFetchResultForLineOfCode.
 dcl-pr fetchResultForLineOfCode ind;
+  result likeds(t_result);
+end-pr;
+
+// Return each of the results for a single line number and this
+//   session in the REPLRSLT table.
+// This must be prepared with prepareFetchResultForAllCode.
+dcl-pr fetchResultForAllLinesOfCode ind;
   result likeds(t_result);
 end-pr;
 

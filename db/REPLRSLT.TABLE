@@ -1,8 +1,8 @@
 CREATE OR REPLACE TABLE replrslt
 (
   --Primary Key
-  --CONSTRAINT pk_repl_result
-  --PRIMARY KEY (session_id, line_number, result_number),
+--   CONSTRAINT pk_repl_result
+--   PRIMARY KEY (session_id, line_number, result_number),
 
   --Columns
   session_id VARCHAR(28)
@@ -11,7 +11,8 @@ CREATE OR REPLACE TABLE replrslt
   result_number FOR COLUMN resultNum DEC(4,0) NOT NULL,
   result_description FOR COLUMN resultDes VARCHAR(1000) NOT NULL,
   loop_count DEC(5,0) NOT NULL DEFAULT 1,
-  result_type FOR COLUMN resultType CHAR(32) NOT NULL DEFAULT 'EVAL'
+  result_type FOR COLUMN resultType CHAR(32) NOT NULL DEFAULT '',
+  external_session_id VARCHAR(28)
 
 )
 RCDFMT replrsltf;
@@ -31,6 +32,7 @@ LABEL ON COLUMN replrslt
   result_number TEXT IS 'Result Number',
   result_description TEXT IS 'Result Description',
   loop_count TEXT IS 'Occurrences of Result',
-  result_type TEXT IS 'Result Type'
+  result_type TEXT IS 'Result Type',
+  external_session_id TEXT IS 'External Session ID'
 );
 

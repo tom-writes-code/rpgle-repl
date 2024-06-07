@@ -23,12 +23,6 @@ dcl-c c_replEqualsStatement 'EQL';
 
 dcl-s t_triggerType char(3) template;
 
-dcl-ds t_referenceSource qualified template;
-  library char(10);
-  file char(10);
-  member char(10);
-end-ds;
-
 // Given the line number of code just posted, and the meta-data
 //   of what it was, insert the relevant evaluation code.
 // Required meta-data required:
@@ -126,6 +120,6 @@ end-pr;
 dcl-pr replresultEvaluationHelpers end-pr;
 
 // Separate a /copy or /include statement into the component parts
-dcl-pr separateReferenceSource likeds(t_referenceSource);
+dcl-pr separateReferenceSource likeds(t_sourceLocation);
   code like(t_lineOfCode.code) value;
 end-pr;
