@@ -17,16 +17,27 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 //-----------------------------------------------------------------------
 
 dcl-proc createGeneratedSourceObject export;
+  dcl-pi *n;
+    sourceLocation likeds(t_sourceLocation) const options(*nopass);
+  end-pi;
 
   refreshGeneratedSourceObject();
 
-  createSqlAlias();
+  if %passed(sourceLocation);
+    createSqlAlias(sourceLocation);
+  else;  
+    createSqlAlias();
+  endif;  
 
   setGeneratedSourceObjectControlOptions();
 
   setGeneratedSourceObjectReferenceSource();
 
-  addPseudoCodeToGeneratedSourceObject();
+  if %passed(sourceLocation);
+    addPseudoCodeToGeneratedSourceObject(sourceLocation);
+  else;
+    addPseudoCodeToGeneratedSourceObject();
+  endif;  
 
   replResultEvaluationHelpers();
 

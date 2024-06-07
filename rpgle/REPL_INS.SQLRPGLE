@@ -67,15 +67,34 @@ end-proc;
 //-----------------------------------------------------------------------
 
 dcl-proc createSqlAlias export;
+  dcl-pi *n;
+    sourceLocation likeds(t_sourceLocation) const options(*nopass);
+  end-pi;
 
   dcl-s sqlQuery varchar(100);
 
-  sqlQuery = 'CREATE ALIAS '
-            + c_generatedSourceLibrary + '.' + c_aliasName
-            + ' FOR '
-            + c_generatedSourceLibrary
-              + '.' + c_generatedSourceFile
-              + ' (' + c_generatedSourceMember + ')';
+  if %passed(sourceLocation)
+  and sourceLocation.library <> *blanks
+  and sourceLocation.file <> *blanks
+  and sourceLocation.member <> *blanks;
+
+    sqlQuery = 'CREATE ALIAS '
+              + c_generatedSourceLibrary + '.' + c_aliasName
+              + ' FOR '
+              + sourceLocation.library
+                + '.' + sourceLocation.file
+                + ' (' + sourceLocation.member + ')';
+
+  else;
+
+    sqlQuery = 'CREATE ALIAS '
+              + c_generatedSourceLibrary + '.' + c_aliasName
+              + ' FOR '
+              + c_generatedSourceLibrary
+                + '.' + c_generatedSourceFile
+                + ' (' + c_generatedSourceMember + ')';
+
+  endif;            
 
   exec sql PREPARE createAlias FROM :sqlQuery;
 

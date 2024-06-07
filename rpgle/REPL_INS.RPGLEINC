@@ -35,7 +35,9 @@ end-pr;
 // Create an alias REPL_ALIAS for the c_generatedSourceMember
 //   of c_generatedSourceFile in c_generatedSourceLibrary.
 // This will be used in insertSingleLineOfGeneratedCode.
-dcl-pr createSqlAlias end-pr;
+dcl-pr createSqlAlias;
+  sourceLocation likeds(t_sourceLocation) const options(*nopass);
+end-pr;
 
 // Drop the alias REPL_ALIAS.
 dcl-pr dropSqlAlias end-pr;
