@@ -67,6 +67,8 @@ end-proc;
 //-----------------------------------------------------------------------
 
 dcl-proc createSqlAlias export;
+  dcl-pi *n;
+  end-pi;
 
   dcl-s sqlQuery varchar(100);
 
@@ -75,7 +77,7 @@ dcl-proc createSqlAlias export;
             + ' FOR '
             + c_generatedSourceLibrary
               + '.' + c_generatedSourceFile
-              + ' (' + c_generatedSourceMember + ')';
+              + ' (' + c_generatedSourceMember + ')';     
 
   exec sql PREPARE createAlias FROM :sqlQuery;
 

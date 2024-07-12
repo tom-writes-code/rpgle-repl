@@ -17,6 +17,9 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 //-----------------------------------------------------------------------
 
 dcl-proc createGeneratedSourceObject export;
+  dcl-pi *n;
+    sourceLocation likeds(t_sourceLocation) const options(*nopass);
+  end-pi;
 
   refreshGeneratedSourceObject();
 
@@ -26,7 +29,11 @@ dcl-proc createGeneratedSourceObject export;
 
   setGeneratedSourceObjectReferenceSource();
 
-  addPseudoCodeToGeneratedSourceObject();
+  if %passed(sourceLocation);
+    addPseudoCodeToGeneratedSourceObject(sourceLocation);
+  else;
+    addPseudoCodeToGeneratedSourceObject();
+  endif;  
 
   replResultEvaluationHelpers();
 
@@ -101,7 +108,7 @@ end-proc;
 
 dcl-proc addPseudoCodeToGeneratedSourceObject;
   dcl-pi *n;
-    sourceLocation likeds(t_sourceLocation) const options(*nopass);
+    iSourceLocation likeds(t_sourceLocation) const options(*nopass);
     piCurrentScope like(t_variable.scope) const options(*nopass);
   end-pi;
 
@@ -117,15 +124,23 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
   dcl-ds referenceSource likeds(t_sourceLocation);
   dcl-s dsNestingLimit packed(2) inz(1);
   dcl-s replHelperCodeFoundOnLine ind;
+  dcl-ds sourceLocation likeds(t_sourceLocation);
 
-  if %parms() >= %parmnum(sourceLocation)
-  and not sourceLocation.isUserDirected;
+  if %passed(iSourceLocation) and not sourceLocation.isUserDirected;
     replCode = *off;
+  endif;
+
+  if %passed(iSourceLocation);
+    eval-corr sourceLocation = iSourceLocation;
+  endif;
+
+  if %passed(iSourceLocation) and sourceLocation.isUserDirected;
+    replCode = *on;
   endif;
 
   if replCode;
     insertSingleLineOfGeneratedCode(*blanks);
-    if %parms() >= %parmnum(sourceLocation);
+    if %passed(iSourceLocation);
       prepareFetchLinesOfPseudoCode(sourceLocation);
     else;
       prepareFetchLinesOfPseudoCode();
@@ -134,7 +149,7 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
     prepareFetchLinesOfPseudoCode(sourceLocation);
   endif;
 
-  if %parms() >= %parmnum(piCurrentScope);
+  if %passed(piCurrentScope);
     currentScope = piCurrentScope;
   else;
     currentScope = 'MAIN';
@@ -143,8 +158,8 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
   continuousLineOfCode = *blanks;
   replHelperCodeFoundOnLine = *off;
 
-  dow fetchLineOfPseudoCode(lineOfCode: replCode);
-
+  dow fetchLineOfPseudoCode(lineOfCode: replCode: sourceLocation);
+ 
     lineOfCode = stripComments(
       lineOfCode: 
       %scan('exec sql': %lower(%trim(continuousLineOfCode)) + ' ' 
@@ -175,6 +190,11 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
       iter;
     endif;
 
+    // just ignore these too
+    if lineOfCode.code = '**FREE';
+      iter;
+    endif;
+
     // repl goes out the window if we hit fixed format.
     // ignore it and move on.
     if codeIsFixedFormat(lineOfCode.code);
@@ -190,7 +210,7 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
       continuousLineOfCode = *blanks;
       // our recursive call will have ruined us. Pick up where we left off
       // unless we're back to mainline code, in which case we're there.
-      if %parms() >= %parmnum(sourceLocation);
+      if %passed(iSourceLocation);
         prepareFetchLinesOfPseudoCode(sourceLocation: lineOfCode.line);
       endif;
       iter;
@@ -338,7 +358,7 @@ dcl-proc addPseudoCodeToGeneratedSourceObject;
 
   enddo;
 
-  if replCode;
+  if replCode or (%passed(iSourceLocation) and sourceLocation.isUserDirected);
 
     insertSingleLineOfGeneratedCode(*blanks);
 

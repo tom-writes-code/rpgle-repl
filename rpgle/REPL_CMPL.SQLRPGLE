@@ -26,8 +26,8 @@ dcl-proc compileGeneratedSourceObject export;
   dcl-pi *n;
     showModuleInstructions ind const;
     piBatchMode ind const options(*omit: *nopass);
-    piUserServicePrograms
-      likeds(t_serviceProgram) dim(10) const options(*omit: *nopass);
+    piUserServicePrograms likeds(t_serviceProgram) dim(10) 
+      const options(*omit: *nopass: *exact);
   end-pi;
 
   dcl-s promptIt char(1);
@@ -38,13 +38,13 @@ dcl-proc compileGeneratedSourceObject export;
   dcl-s i packed(2);
   dcl-ds thrownError likeds(t_thrownError);
 
-  if %parms >= %parmnum(piBatchMode) and %addr(piBatchMode) <> *null;
+  if %passed(piBatchMode);
     batchMode = piBatchMode;
   else;
     batchMode = *off;
   endif;
 
-  if %parms >= %parmnum(piUserServicePrograms)
+  if %parms >= %parmnum(piUserServicePrograms) 
   and %addr(piUserServicePrograms) <> *null;
     userServicePrograms = piUserServicePrograms;
   endif;
@@ -55,11 +55,12 @@ dcl-proc compileGeneratedSourceObject export;
 
   monitor;
     runCommand(promptIt +
-               'CRTSQLRPGI OBJ(&1/&2) SRCFILE(&1/&3) SRCMBR(&4) ' +
+               'CRTSQLRPGI OBJ(&1/&2) SRCFILE(&3/&4) SRCMBR(&5) ' +
                'OBJTYPE(*MODULE) DBGVIEW(*SOURCE) DATFMT(*ISO) ' +
                'RPGPPOPT(*LVL2) COMMIT(*NONE)':
                  c_generatedSourceLibrary:
                  c_generatedModule:
+                 c_generatedSourceLibrary:
                  c_generatedSourceFile:
                  c_generatedSourceMember);
   on-error;

@@ -118,12 +118,25 @@ dcl-proc prepareFetchLinesOfPseudoCode export;
     eval-corr sourceLocation = iSourceLocation;  
   endif;
 
+  if sourceLocation.library = *blanks;
+    sourceLocation.library = '*LIBL';
+  endif;
+  if sourceLocation.file = *blanks;
+    sourceLocation.file = 'REPLSRC';
+  endif;
+  if sourceLocation.member = *blanks;
+    sourceLocation.member = 'REPLSRC';
+  endif;
+
   // if we've specified somewhere other than the default location
-  if %parms() >= %parmnum(iSourceLocation)
-  and not (
-    %upper(sourceLocation.library) = '*LIBL'
-    and %upper(sourceLocation.file) = 'REPLSRC'
-    and %upper(sourceLocation.member) = 'REPLSRC'  
+  if (
+    %passed(iSourceLocation)
+    and not (
+      %upper(sourceLocation.library) = '*LIBL'
+      and %upper(sourceLocation.file) = 'REPLSRC'
+      and %upper(sourceLocation.member) = 'REPLSRC'  
+  )) or (
+    %passed(iSourceLocation) and sourceLocation.isUserDirected = *on
   );
 
     monitor;
@@ -195,9 +208,11 @@ dcl-proc fetchLineOfPseudoCode export;
   dcl-pi *n ind;
     lineOfCode likeds(t_lineOfCode);
     replCode ind const;
+    iSourceLocation likeds(t_sourceLocation) const options(*nopass);
   end-pi;
 
-  if not replCode;
+  if not replCode 
+  or (%passed(iSourceLocation) and iSourceLocation.isUserDirected);
 
     lineOfCode.line = 0;
     exec sql

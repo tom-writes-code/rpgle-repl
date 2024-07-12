@@ -170,4 +170,79 @@ end-proc;
 
 //-----------------------------------------------------------------------
 
+dcl-proc replResult_replPrint export;
+  dcl-pi *n;
+    repl_line like(t_lineOfCode.line) const;
+    repl_result varchar(256) options(*convert) value;
+  end-pi;
+
+  if repl_result = *on and %len(repl_result) = 256;
+    repl_result = 'True';
+  elseif repl_result = *off and %len(repl_result) = 256;
+    repl_result = 'False';
+  endif;  
+
+  exec sql
+    INSERT INTO replrslt
+      (line_number, result_number, result_description, result_type)
+      (SELECT :repl_line,
+              COALESCE(MAX(result_number), 0)+1,
+              :repl_result,
+              'EVALUATION'
+         FROM replrslt
+        WHERE session_id = QSYS2.JOB_NAME
+              AND line_number = :repl_line);
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc replResult_replEquals export;
+  dcl-pi *n;
+    repl_line like(t_lineOfCode.line) const;
+    repl_name char(70) const;
+    repl_expected varchar(2048) options(*convert) value;
+    repl_actual varchar(2048) options(*convert) value;
+  end-pi;
+
+  dcl-s repl_result_type_wk char(20) inz('EVALUATION');
+  dcl-s result_description varchar(1000) inz('');      
+
+  if repl_expected= *on and %len(repl_expected) = 2048;
+    repl_expected = 'True';
+  elseif repl_expected = *off and %len(repl_expected) = 2048;
+    repl_expected = 'False';
+  endif;  
+  if repl_actual= *on and %len(repl_actual) = 2048;
+    repl_actual = 'True';
+  elseif repl_actual = *off and %len(repl_actual) = 2048;
+    repl_actual = 'False';
+  endif;  
+
+  result_description = %trim(repl_name) + ' = ' + %trim(repl_actual);  
+  if repl_actual = repl_expected;             
+    repl_result_type_wk = 'TEST-SUCCESS';
+    result_description = 'Success, ' +   
+    result_description;                  
+  else;                                  
+    repl_result_type_wk = 'TEST-FAILURE';
+    result_description = 'Failure, ' +   
+    result_description +        
+    ', expected ' +             
+    %trim(repl_expected);
+  endif;                        
+
+  exec sql                                                         
+    INSERT INTO replrslt                                           
+      (line_number, result_number, result_description, result_type)
+      (SELECT :repl_line,                                          
+              COALESCE(MAX(result_number), 0)+1,                   
+              :result_description,                                 
+              :repl_result_type_wk                                 
+         FROM replrslt                                             
+        WHERE session_id = (QSYS2.JOB_NAME)                        
+              AND line_number = :repl_line);                       
+
+end-proc;              
+
 

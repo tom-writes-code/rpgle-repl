@@ -5,6 +5,8 @@
 /Endif
 /Define REPL_CMPL
 
+/include repl_pseut
+
 dcl-c c_generatedSourceLibrary 'QTEMP';
 dcl-c c_generatedSourceFile 'QREPL_SRC';
 dcl-c c_generatedSourceMember 'REPL_SRC';
@@ -43,7 +45,7 @@ end-ds;
 // For REPL functionality, REPL_HLPR is always bound in.
 dcl-pr compileGeneratedSourceObject;
   showModuleInstructions ind const;
-  batchMode ind const options(*omit: *nopass);
-  userServicePrograms
-    likeds(t_serviceProgram) dim(10) const options(*omit: *nopass);
+  piBatchMode ind const options(*omit: *nopass);
+  piUserServicePrograms likeds(t_serviceProgram) dim(10) 
+    const options(*omit: *nopass: *exact);
 end-pr;
