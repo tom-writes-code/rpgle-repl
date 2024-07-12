@@ -136,7 +136,9 @@ dcl-proc prepareFetchLinesOfPseudoCode export;
       and %upper(sourceLocation.file) = 'REPLSRC'
       and %upper(sourceLocation.member) = 'REPLSRC'  
   )) or (
-    %passed(iSourceLocation) and sourceLocation.isUserDirected = *on
+    %passed(iSourceLocation) 
+    and sourceLocation.isUserDirected = *on
+    and sourceLocation.snippetName = *blanks  
   );
 
     monitor;
@@ -212,7 +214,11 @@ dcl-proc fetchLineOfPseudoCode export;
   end-pi;
 
   if not replCode 
-  or (%passed(iSourceLocation) and iSourceLocation.isUserDirected);
+  or (
+    %passed(iSourceLocation) 
+    and iSourceLocation.isUserDirected
+    and iSourceLocation.snippetName = *blanks
+  );
 
     lineOfCode.line = 0;
     exec sql
