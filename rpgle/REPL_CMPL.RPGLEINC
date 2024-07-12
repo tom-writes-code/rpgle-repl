@@ -48,6 +48,4 @@ dcl-pr compileGeneratedSourceObject;
   piBatchMode ind const options(*omit: *nopass);
   piUserServicePrograms likeds(t_serviceProgram) dim(10) 
     const options(*omit: *nopass: *exact);
-  iSourceLocation likeds(t_sourceLocation) 
-    const options(*omit: *nopass: *exact); 
 end-pr;

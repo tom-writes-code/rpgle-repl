@@ -28,8 +28,6 @@ dcl-proc compileGeneratedSourceObject export;
     piBatchMode ind const options(*omit: *nopass);
     piUserServicePrograms likeds(t_serviceProgram) dim(10) 
       const options(*omit: *nopass: *exact);
-    iSourceLocation likeds(t_sourceLocation) 
-      const options(*omit: *nopass: *exact); 
   end-pi;
 
   dcl-s promptIt char(1);
@@ -39,7 +37,6 @@ dcl-proc compileGeneratedSourceObject export;
   dcl-ds userServicePrograms likeds(t_serviceProgram) dim(10);
   dcl-s i packed(2);
   dcl-ds thrownError likeds(t_thrownError);
-  dcl-ds sourceLocation likeds(t_sourceLocation);
 
   if %passed(piBatchMode);
     batchMode = piBatchMode;
@@ -50,16 +47,6 @@ dcl-proc compileGeneratedSourceObject export;
   if %parms >= %parmnum(piUserServicePrograms) 
   and %addr(piUserServicePrograms) <> *null;
     userServicePrograms = piUserServicePrograms;
-  endif;
-
-  if not %passed(iSourceLocation);
-    sourceLocation.library = c_generatedSourceLibrary;
-    sourceLocation.file = c_generatedSourceFile;
-    sourceLocation.member = c_generatedSourceMember;
-  else;
-    sourceLocation.library = iSourceLocation.library;
-    sourceLocation.file = iSourceLocation.file;
-    sourceLocation.member = iSourceLocation.member;
   endif;
 
   if showModuleInstructions and not batchMode;
@@ -73,9 +60,9 @@ dcl-proc compileGeneratedSourceObject export;
                'RPGPPOPT(*LVL2) COMMIT(*NONE)':
                  c_generatedSourceLibrary:
                  c_generatedModule:
-                 sourceLocation.library:
-                 sourceLocation.file:
-                 sourceLocation.member);
+                 c_generatedSourceLibrary:
+                 c_generatedSourceFile:
+                 c_generatedSourceMember);
   on-error;
     printCompilationErrors();
     thrownError.errorCode = c_error_module_not_created;
