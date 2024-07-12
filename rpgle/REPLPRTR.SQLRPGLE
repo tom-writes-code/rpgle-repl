@@ -57,7 +57,7 @@ dow fetchResultForAllLinesOfCode(result);
     select;
       when result.resultType = 'TEST-SUCCESS';
         passCount += 1;
-      when result.resultType = 'TEST-FAILURE'  ;
+      when result.resultType = 'TEST-FAILURE';
         failCount += 1;
       other;
         exceptionFound = *on;
@@ -117,13 +117,13 @@ dcl-proc writeTestSummary;
     exceptionFound ind const options(*exact);
   end-pi;
 
-  dcl-s resultString char(50) static;
+  dcl-s resultString char(100) static;
 
   resultString = *blanks;
 
   if exceptionFound;
     resultString = 
-      'Could not complete build or run, run in verbose mode for details' + 
+      'Could not complete build or run, run in verbose mode for details\n' + 
       newLine;  
   elseif failCount > 0;
     resultString = 
@@ -144,13 +144,13 @@ dcl-proc writeTestSummary;
     resultString = 
       'No tests executed, ' + 
       %char(passCount) + ' tests passed, ' +
-      %char(failCount) + ' tests failed' + 
+      %char(failCount) + ' tests failed\n' + 
       newLine; 
   else;
     resultString = 
       'Success, ' + 
       %char(passCount) + ' tests passed, ' +
-      %char(failCount) + ' tests failed' + 
+      %char(failCount) + ' tests failed\n' + 
       newLine; 
   endif;
 

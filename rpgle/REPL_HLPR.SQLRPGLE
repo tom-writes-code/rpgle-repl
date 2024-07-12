@@ -184,10 +184,11 @@ dcl-proc replResult_replPrint export;
 
   exec sql
     INSERT INTO replrslt
-      (line_number, result_number, result_description)
+      (line_number, result_number, result_description, result_type)
       (SELECT :repl_line,
               COALESCE(MAX(result_number), 0)+1,
-              :repl_result
+              :repl_result,
+              'EVALUATION'
          FROM replrslt
         WHERE session_id = QSYS2.JOB_NAME
               AND line_number = :repl_line);

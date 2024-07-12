@@ -52,6 +52,7 @@ end-pr;
 dcl-pr fetchLineOfPseudoCode ind;
   lineOfCode likeds(t_lineOfCode);
   replCode ind const;
+  iSourceLocation likeds(t_sourceLocation) const options(*nopass);
 end-pr;
 
 // Add a single line of code for this session to the REPLSRC table.

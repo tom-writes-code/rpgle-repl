@@ -26,8 +26,10 @@ dcl-proc compileGeneratedSourceObject export;
   dcl-pi *n;
     showModuleInstructions ind const;
     piBatchMode ind const options(*omit: *nopass);
-    piUserServicePrograms
-      likeds(t_serviceProgram) dim(10) const options(*omit: *nopass);
+    piUserServicePrograms likeds(t_serviceProgram) dim(10) 
+      const options(*omit: *nopass: *exact);
+    iSourceLocation likeds(t_sourceLocation) 
+      const options(*omit: *nopass: *exact); 
   end-pi;
 
   dcl-s promptIt char(1);
@@ -37,16 +39,27 @@ dcl-proc compileGeneratedSourceObject export;
   dcl-ds userServicePrograms likeds(t_serviceProgram) dim(10);
   dcl-s i packed(2);
   dcl-ds thrownError likeds(t_thrownError);
+  dcl-ds sourceLocation likeds(t_sourceLocation);
 
-  if %parms >= %parmnum(piBatchMode) and %addr(piBatchMode) <> *null;
+  if %passed(piBatchMode);
     batchMode = piBatchMode;
   else;
     batchMode = *off;
   endif;
 
-  if %parms >= %parmnum(piUserServicePrograms)
+  if %parms >= %parmnum(piUserServicePrograms) 
   and %addr(piUserServicePrograms) <> *null;
     userServicePrograms = piUserServicePrograms;
+  endif;
+
+  if not %passed(iSourceLocation);
+    sourceLocation.library = c_generatedSourceLibrary;
+    sourceLocation.file = c_generatedSourceFile;
+    sourceLocation.member = c_generatedSourceMember;
+  else;
+    sourceLocation.library = iSourceLocation.library;
+    sourceLocation.file = iSourceLocation.file;
+    sourceLocation.member = iSourceLocation.member;
   endif;
 
   if showModuleInstructions and not batchMode;
@@ -55,13 +68,14 @@ dcl-proc compileGeneratedSourceObject export;
 
   monitor;
     runCommand(promptIt +
-               'CRTSQLRPGI OBJ(&1/&2) SRCFILE(&1/&3) SRCMBR(&4) ' +
+               'CRTSQLRPGI OBJ(&1/&2) SRCFILE(&3/&4) SRCMBR(&5) ' +
                'OBJTYPE(*MODULE) DBGVIEW(*SOURCE) DATFMT(*ISO) ' +
                'RPGPPOPT(*LVL2) COMMIT(*NONE)':
                  c_generatedSourceLibrary:
                  c_generatedModule:
-                 c_generatedSourceFile:
-                 c_generatedSourceMember);
+                 sourceLocation.library:
+                 sourceLocation.file:
+                 sourceLocation.member);
   on-error;
     printCompilationErrors();
     thrownError.errorCode = c_error_module_not_created;
