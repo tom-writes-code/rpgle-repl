@@ -114,9 +114,9 @@ dcl-proc evaluateLineOfPseudoCode export;
         insertSingleLineOfGeneratedCode
           (%trim(variable.scope) + '_...');
         insertSingleLineOfGeneratedCode
-          (%trim(%scanrpl('.':'_':%char(variable.id))) + '...');
+          (%trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
         insertSingleLineOfGeneratedCode
-          ('_single(');
+          ('single(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
         insertSingleLineOfGeneratedCode
@@ -141,13 +141,13 @@ dcl-proc evaluateLineOfPseudoCode export;
       and arrayElement <> 0
       and (variable.name <> *blanks and variable.type <> *blanks);
         insertSingleLineOfGeneratedCode
-          ('repl_');
+          ('repl_...');
         insertSingleLineOfGeneratedCode
-          (%trim(variable.scope) + '_');
+          (%trim(variable.scope) + '_...');
         insertSingleLineOfGeneratedCode
-          (%trim(%scanrpl('.':'_':%char(variable.id))));
+          (%trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
         insertSingleLineOfGeneratedCode
-          ('_single(');
+          ('single(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
         insertSingleLineOfGeneratedCode
@@ -172,10 +172,13 @@ dcl-proc evaluateLineOfPseudoCode export;
       and arrayElement = 0
       and (variable.name <> *blanks and variable.type <> *blanks);
         insertSingleLineOfGeneratedCode
-          ('repl_'
-              + %trim(variable.scope) + '_'
-              + %trim(%scanrpl('.':'_':%char(variable.id)))
-              + '_multiple(');
+          ('repl_...');
+        insertSingleLineOfGeneratedCode  
+          (%trim(variable.scope) + '_...');
+        insertSingleLineOfGeneratedCode  
+          (%trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
+        insertSingleLineOfGeneratedCode  
+          ('multiple(');
         insertSingleLineOfGeneratedCode
           ('  ' + %char(line) + ':');
         insertSingleLineOfGeneratedCode
@@ -656,10 +659,13 @@ dcl-proc replResult_evaluate_fld_multiple export;
     ('     else;' );
 
   insertSingleLineOfGeneratedCode
-    ('      repl_'
-       + %trim(variable.scope) + '_'
-       + %trim(%scanrpl('.':'_':%char(variable.id)))
-       + '_single');
+    ('      repl_...');
+  insertSingleLineOfGeneratedCode  
+    (%trim(variable.scope) + '_...');
+  insertSingleLineOfGeneratedCode     
+    (%trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
+  insertSingleLineOfGeneratedCode     
+    ('single');
   insertSingleLineOfGeneratedCode
     ('       (repl_line:');
   insertSingleLineOfGeneratedCode
