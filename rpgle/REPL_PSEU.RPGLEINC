@@ -98,14 +98,14 @@ end-pr;
 //   session in the REPLRSLT table.
 // This must be prepared with prepareFetchResultForLineOfCode.
 dcl-pr fetchResultForLineOfCode ind;
-  result likeds(t_result);
+  result likeds(t_replResult);
 end-pr;
 
 // Return each of the results for a single line number and this
 //   session in the REPLRSLT table.
 // This must be prepared with prepareFetchResultForAllCode.
 dcl-pr fetchResultForAllLinesOfCode ind;
-  result likeds(t_result);
+  result likeds(t_replResult);
 end-pr;
 
 // Housework: Remove any snippets from the database which are

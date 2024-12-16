@@ -414,7 +414,7 @@ end-proc;
 
 dcl-proc fetchResultForLineOfCode export;
   dcl-pi *n ind;
-    result likeds(t_result);
+    result likeds(t_replResult);
   end-pi;
 
   dcl-s loopCount packed(5);
@@ -455,7 +455,7 @@ end-proc;
 
 dcl-proc fetchResultForAllLinesOfCode export;
   dcl-pi *n ind;
-    result likeds(t_result);
+    result likeds(t_replResult);
   end-pi;
 
   dcl-s loopCount packed(5);

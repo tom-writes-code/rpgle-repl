@@ -52,12 +52,13 @@ end-pr;
 
 dcl-pr replResult_replPrint;
   repl_line like(t_lineOfCode.line) const;
-  repl_result varchar(256) options(*convert) value;
+  repl_variable_name char(256) const;
+  repl_result varchar(32768) options(*convert) value;
 end-pr;
 
 dcl-pr replResult_replEquals;
   repl_line like(t_lineOfCode.line) const;
-  repl_name char(70) const;
-  repl_expected varchar(2048) options(*convert) value;
-  repl_actual varchar(2048) options(*convert) value;
+  repl_variable_name char(256) const;
+  repl_expected varchar(32768) options(*convert) value;
+  repl_actual varchar(32768) options(*convert) value;
 end-pr;

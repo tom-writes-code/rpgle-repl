@@ -406,7 +406,7 @@ dcl-proc addStoredCodeToCodePageScreen;
   dcl-s i like(t_lineOfCode.line);
   dcl-s currentCodeLineCount like(t_lineOfCode.line);
   dcl-s blankLineCount like(t_lineOfCode.line);
-  dcl-ds result likeds(t_result);
+  dcl-ds result likeds(t_replResult);
 
   prepareFetchLinesOfPseudoCode();
 

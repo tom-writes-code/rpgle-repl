@@ -173,21 +173,38 @@ end-proc;
 dcl-proc replResult_replPrint export;
   dcl-pi *n;
     repl_line like(t_lineOfCode.line) const;
-    repl_result varchar(256) options(*convert) value;
+    repl_variable_name char(256) const;
+    repl_result varchar(32768) options(*convert) value;
   end-pi;
 
-  if repl_result = *on and %len(repl_result) = 256;
+  dcl-s simple_repl_result char(1000);
+
+  if repl_result = *on and %len(repl_result) = 32768;
     repl_result = 'True';
-  elseif repl_result = *off and %len(repl_result) = 256;
+  elseif repl_result = *off and %len(repl_result) = 32768;
     repl_result = 'False';
+  elseif %len(repl_result) > 1000;
+    repl_result = %subst(repl_result: 1: 1000);  
   endif;  
+
+  monitor;
+    simple_repl_result = repl_result;
+  on-error;
+    simple_repl_result = 'Error, could not parse result';
+  endmon;  
+
+  monitor;
+    simple_repl_result = %trim(repl_variable_name) + ' = ' + %trimr(simple_repl_result);
+  on-error;
+    simple_repl_result = 'Error, could not parse result text';
+  endmon;
 
   exec sql
     INSERT INTO replrslt
       (line_number, result_number, result_description, result_type)
       (SELECT :repl_line,
               COALESCE(MAX(result_number), 0)+1,
-              :repl_result,
+              :simple_repl_result,
               'EVALUATION'
          FROM replrslt
         WHERE session_id = QSYS2.JOB_NAME
@@ -200,36 +217,40 @@ end-proc;
 dcl-proc replResult_replEquals export;
   dcl-pi *n;
     repl_line like(t_lineOfCode.line) const;
-    repl_name char(70) const;
-    repl_expected varchar(2048) options(*convert) value;
-    repl_actual varchar(2048) options(*convert) value;
+    repl_variable_name char(256) const;
+    repl_expected varchar(32768) options(*convert) value;
+    repl_actual varchar(32768) options(*convert) value;
   end-pi;
 
   dcl-s repl_result_type_wk char(20) inz('EVALUATION');
   dcl-s result_description varchar(1000) inz('');      
 
-  if repl_expected= *on and %len(repl_expected) = 2048;
+  if repl_expected = *on and %len(repl_expected) = 32768;
     repl_expected = 'True';
-  elseif repl_expected = *off and %len(repl_expected) = 2048;
+  elseif repl_expected = *off and %len(repl_expected) = 32768;
     repl_expected = 'False';
   endif;  
-  if repl_actual= *on and %len(repl_actual) = 2048;
+  if repl_actual = *on and %len(repl_actual) = 32768;
     repl_actual = 'True';
-  elseif repl_actual = *off and %len(repl_actual) = 2048;
+  elseif repl_actual = *off and %len(repl_actual) = 32768;
     repl_actual = 'False';
   endif;  
-
-  result_description = %trim(repl_name) + ' = ' + %trim(repl_actual);  
+  
+  monitor; 
+    result_description = %trim(repl_variable_name) + ' = ' + %trim(repl_actual);  
+  on-error;
+    result_description = *blanks;
+  endmon;    
   if repl_actual = repl_expected;             
     repl_result_type_wk = 'TEST-SUCCESS';
     result_description = 'Success, ' +   
-    result_description;                  
+    %trimr(result_description);                  
   else;                                  
     repl_result_type_wk = 'TEST-FAILURE';
     result_description = 'Failure, ' +   
     result_description +        
     ', expected ' +             
-    %trim(repl_expected);
+    %trimr(repl_expected);
   endif;                        
 
   exec sql                                                         

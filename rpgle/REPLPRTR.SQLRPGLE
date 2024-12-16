@@ -31,7 +31,7 @@ dcl-s data char(10);
 dcl-s printIndividualResults ind;
 dcl-s printSummaryResult ind;
 
-dcl-ds result likeds(t_result);
+dcl-ds result likeds(t_replResult);
 dcl-s passCount zoned(5) inz(0);
 dcl-s failCount zoned(5) inz(0);
 dcl-s exceptionFound ind;
@@ -91,7 +91,7 @@ return;
 dcl-proc writeTestResult;
   dcl-pi *n;
     line packed(6) const options(*exact);
-    result likeds(t_result) const options(*exact);
+    result likeds(t_replResult) const options(*exact);
   end-pi;
 
   dcl-s resultString char(1100) static;
