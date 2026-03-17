@@ -1,20 +1,20 @@
-e not # Migrating from IBM BOB to IBM TOBI
+# Migrating from IBM BOB to IBM TOBI
 
 This document covers the migration of rpgle-repl from **IBM BOB** (Better Object Builder)
 to **IBM TOBI** and the IBM i system changes you'll need to make.
 
 ## What Changed In This Repo
 
-### Removed
-- **All `Rules.mk` files** (root, `bnd/`, `cmd/`, `db/`, `dsp/`, `rpgle/`)
-  - BOB used GNU Make with these files to define build targets and dependencies.
-  - TOBI auto-discovers source objects from file extensions. No Makefiles needed.
+### Build Compatibility
+- **`Rules.mk` files are required** for the currently installed TOBI/makei toolchain (`tobi` package 3.2.1).
+  - The package provides the `makei` CLI and still expects Rules.mk-driven dependency metadata.
+  - If Rules.mk files are removed, `makei build` fails with missing `.Rules.mk.build`.
 
 ### Added
 - **`.ibmi.json` sidecar files** for each *SRVPGM and *PGM
   - `bnd/*.ibmi.json` — one per service program, specifying modules and bound service programs.
   - `rpgle/*.ibmi.json` — one per program, specifying modules, bound service programs, and activation group.
-  - These replace the dependency declarations that were in `bnd/Rules.mk` and `rpgle/Rules.mk`.
+  - These do not replace Rules.mk in the currently installed makei version on IBM i.
 
 ### Updated
 - **`iproj.json`** — `curlib` and `objlib` changed from `REPLBOB` to `RPGLEREPL`.
@@ -53,7 +53,7 @@ yum remove ibm-bob
 Verify TOBI is installed:
 
 ```bash
-tobi --version
+makei --version
 ```
 
 ### Step 2: Create / Rename the Target Library
@@ -75,15 +75,14 @@ RNMOBJ OBJ(REPLBOB) OBJTYPE(*LIB) NEWOBJ(RPGLEREPL)
 From the IFS project directory (wherever you cloned the repo), run:
 
 ```bash
-tobi build
+makei build
 ```
 
 TOBI reads `iproj.json` for the target library, auto-discovers your source files by extension,
 and reads the `.ibmi.json` sidecar files for build parameters (bound service programs, activation
 group, etc.).
 
-That's it. No `makei` call, no Makefile targets. TOBI handles the build order and dependencies
-automatically.
+`makei` uses Rules.mk for dependency resolution and build order.
 
 ### Step 4: Verify the Build
 
@@ -106,7 +105,7 @@ If you had any automation calling `makei` or referencing `REPLBOB`, update them:
 
 | Before (BOB)            | After (TOBI)              |
 |-------------------------|---------------------------|
-| `makei build`           | `tobi build`              |
+| `makei build`           | `makei build`             |
 | `REPLBOB` library       | `RPGLEREPL` library       |
 | `Rules.mk` dependencies | `.ibmi.json` sidecar      |
 
@@ -132,6 +131,10 @@ activation group, text description, etc.).
 **"TOBI can't find my source"**
 - Make sure your file extensions match TOBI's expectations (see table above).
 - Check that `iproj.json` exists in the project root.
+
+**"tobi: command not found"**
+- Use `makei build` instead. On IBM i, the `tobi` package provides the `makei` CLI.
+- Confirm with: `which makei` and `makei --version`.
 
 **"Objects are building into the wrong library"**
 - Check `objlib` in `iproj.json` — it should be `RPGLEREPL`.
