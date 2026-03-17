@@ -110,8 +110,61 @@ end-proc;
 
 dcl-proc setGeneratedSourceObjectReferenceSource;
 
-  insertSingleLineOfGeneratedCode
-    ('/include qrpgleref,repl_hlpr');
+  // Emit inline prototype declarations for the REPL_HLPR service program so
+  // the generated snippet is fully self-contained and requires no /include
+  // directive.  Concrete types are used in place of like(t_lineOfCode.line)
+  // (which is packed(6:0)) so that QRPGLEREF source PF is not needed at runtime.
+
+  insertSingleLineOfGeneratedCode('dcl-pr replHlpr_recordSqlResult;');
+  insertSingleLineOfGeneratedCode('  line packed(6:0) const;');
+  insertSingleLineOfGeneratedCode('  sqlstate varchar(5) const;');
+  insertSingleLineOfGeneratedCode('  sqlCode packed(10) const;');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
+
+  insertSingleLineOfGeneratedCode('dcl-pr replHlpr_loop;');
+  insertSingleLineOfGeneratedCode('  repl_line packed(6:0) const;');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
+
+  insertSingleLineOfGeneratedCode('dcl-pr replHlpr_unknown;');
+  insertSingleLineOfGeneratedCode('  repl_line packed(6:0) const;');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
+
+  insertSingleLineOfGeneratedCode('dcl-pr replHlpr_conditional;');
+  insertSingleLineOfGeneratedCode('  repl_line packed(6:0) const;');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
+
+  insertSingleLineOfGeneratedCode('dcl-pr replResult_rpgIndicator;');
+  insertSingleLineOfGeneratedCode('  repl_line packed(6:0) const;');
+  insertSingleLineOfGeneratedCode('  repl_name char(70) const;');
+  insertSingleLineOfGeneratedCode('  repl_i ind const;');
+  insertSingleLineOfGeneratedCode('  repl_result_type char(20) const options(*nopass);');
+  insertSingleLineOfGeneratedCode('  repl_expected ind const options(*nopass);');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
+
+  insertSingleLineOfGeneratedCode('dcl-pr replResult_recordCustomMessage;');
+  insertSingleLineOfGeneratedCode('  customMessage varchar(132) const;');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
+
+  insertSingleLineOfGeneratedCode('dcl-pr replResult_replPrint;');
+  insertSingleLineOfGeneratedCode('  repl_line packed(6:0) const;');
+  insertSingleLineOfGeneratedCode('  repl_variable_name char(256) const;');
+  insertSingleLineOfGeneratedCode('  repl_result varchar(32768) options(*convert) value;');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
+
+  insertSingleLineOfGeneratedCode('dcl-pr replResult_replEquals;');
+  insertSingleLineOfGeneratedCode('  repl_line packed(6:0) const;');
+  insertSingleLineOfGeneratedCode('  repl_variable_name char(256) const;');
+  insertSingleLineOfGeneratedCode('  repl_expected varchar(32768) options(*convert) value;');
+  insertSingleLineOfGeneratedCode('  repl_actual varchar(32768) options(*convert) value;');
+  insertSingleLineOfGeneratedCode('end-pr;');
+  insertSingleLineOfGeneratedCode(*blanks);
 
 end-proc;
 

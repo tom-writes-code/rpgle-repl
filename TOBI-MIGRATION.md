@@ -97,7 +97,7 @@ TOBI uses GNU Make under the covers. Each directory has a `Rules.mk` that declar
 
 - **Dependency lines**: what each object is built from and what it depends on
 - **Compile overrides**: `private TEXT :=`, `private ACTGRP :=`, etc.
-- **Custom recipes**: for non-standard build steps (e.g. QRPGLEREF source PF)
+- **Custom recipes**: for non-standard build steps (none currently needed)
 
 Object types are inferred from file extensions:
 
