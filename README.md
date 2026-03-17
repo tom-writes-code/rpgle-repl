@@ -139,6 +139,8 @@ migration guide from the previous BOB (Better Object Builder) setup.
 makei build
 ```
 
+Safe to run into an existing library — programs and service programs are replaced in place, and the SQL tables are created only if they don't already exist, so saved snippets and other data are preserved.
+
 For a distributable save file (developer release):
 
 ```bash
