@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPL_CMPL
+/// @brief Compilation service implementation.
+///
+/// Compiles the generated SQLRPGLE source into a module (via CRTSQLRPGI),
+/// resolves bound service programs from /include and /copy directives,
+/// creates the program (via CRTPGM), and parses spooled file output to
+/// extract compilation errors for display in the REPL terminal.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 

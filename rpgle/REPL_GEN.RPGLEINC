@@ -5,20 +5,27 @@
 /EndIf
 /Define REPL_GEN
 
-/include qrpgleref,repl_pseut
+/include repl_pseut
 
-// Using the pseudo code stored in the repl_pseudo_source_code table,
-//   generate the required repl source object.
-// This combines several discrete tasks:
-//   o Create / Clear the repl source object
-//   o Set up an SQL alias to the repl source object
-//   o Add default control options
-//   o Add default reference source
-//   o Add pseudo code to the repl source object, storing
-//      details of the variables as we go
-//   o Create the repl helper procedures
+/// @file REPL_GEN
+/// @brief Source generator - transforms pseudo code into compilable SQLRPGLE source.
+/// @author Tom Sharp
+
+/// Generate the complete REPL source object from the current session's pseudo code.
+///
+/// Orchestrates the full source generation pipeline:
+///   1. Create or clear the generated source file member.
+///   2. Set up an SQL alias to the source member.
+///   3. Insert default control options (ctl-opt).
+///   4. Insert the REPL_HLPR reference source (/include).
+///   5. Process each line of pseudo code, tracking variables as they
+///      are encountered.
+///   6. Generate the evaluation helper procedures for all tracked variables.
+///
+/// @param sourceLocation Optional override for where to read pseudo code from.
 dcl-pr createGeneratedSourceObject;
   sourceLocation likeds(t_sourceLocation) const options(*nopass);
 end-pr;
 
+/// Create or clear the generated source physical file and member.
 dcl-pr refreshGeneratedSourceObject end-pr;

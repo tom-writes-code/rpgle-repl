@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPL_HLPR
+/// @brief Runtime helpers implementation.
+///
+/// Provides the procedures that the generated REPL program calls at
+/// runtime to record execution results (SQL outcomes, loop counts,
+/// conditional evaluations, variable values, and test assertions)
+/// into the REPLRSLT table.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 

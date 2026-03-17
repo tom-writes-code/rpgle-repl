@@ -1,5 +1,14 @@
 **FREE
 
+/// @file REPLCMD
+/// @brief Command entry point for external callers.
+///
+/// Service program entry that reads parameters, sets up work files,
+/// orchestrates the compile-run-cleanup lifecycle, and records any
+/// errors into the REPLRSLT table.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked);
 

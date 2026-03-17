@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPL_USR
+/// @brief User actions implementation.
+///
+/// Handles running the generated program, displaying generated source,
+/// starting interactive debug, showing spool files and job log, opening
+/// the CL command line, and CL command execution with parameter
+/// substitution.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 //----------------------------------------------------------------------

@@ -7,193 +7,225 @@
 
 /include repl_pseu
 
+/// @file REPL_VARS
+/// @brief Variable management - discovers, stores, and retrieves RPG variable metadata.
+/// @author Tom Sharp
+
+/// Describes a single variable, data structure, or constant discovered in pseudo code.
 dcl-ds t_variable qualified template;
+  /// Variable name (up to 70 characters).
   name char(70);
+  /// Data type: character, numeric, indicator, date, time, timestamp, datastruct, or constant.
   type char(10);
+  /// Array dimension (0 = not an array).
   arraySize packed(10);
+  /// Parent data structure name (blank if standalone).
   parentName char(70);
+  /// Parent data structure array size.
   parentArraySize packed(10);
+  /// Scope: MAIN or the procedure name this variable belongs to.
   scope char(70);
+  /// The type definition keyword (e.g. 'char(10)', 'packed(7:2)').
   definition char(50);
+  /// 'Y' if declared with TEMPLATE keyword.
   template char(1);
+  /// 'Y' if the variable has been fully defined.
   defined char(1);
+  /// Unique identity from REPLVARS.variable_id.
   id packed(18);
+  /// 'Y' if the variable is referenced in an evaluation statement.
   used char(1);
 end-ds;
 
-// Given a complete line of code, does the string start with:
-//  o DCL-DS
-// OR
-// Given a complete line of code, does the string contain:
-//  o LIKEDS
-//  o LIKEREC
-// This function is case-insensitive.
+/// Detect a data structure declaration (DCL-DS, LIKEDS, or LIKEREC).
+///
+/// @param code The line of code to check.
+/// @return *on if a data structure declaration was found.
 dcl-pr dataStructureStartFound ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Given a complete line of code, does the string contain:
-//  o END-DS
-// This function is case-insensitive.
+/// Detect an END-DS statement indicating the end of a data structure.
+///
+/// @param code The line of code to check.
+/// @return *on if END-DS was found.
 dcl-pr dataStructureEndFound ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Given a complete line of code, does the string start with:
-//  o DCL-S
-// This function is case-insensitive.
+/// Detect a standalone variable declaration (DCL-S).
+///
+/// @param code The line of code to check.
+/// @return *on if DCL-S was found.
 dcl-pr variableDefinitionFound ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Given a complete line of code, does the string start with:
-//  o DCL-C
-// This function is case-insensitive.
+/// Detect a named constant declaration (DCL-C).
+///
+/// @param code The line of code to check.
+/// @return *on if DCL-C was found.
 dcl-pr constantDefinitionFound ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Given a complete line of code containing a data structure
-//   definition (defined with DCL-DS), extract and store
-//   the following information to the REPLVARS table:
-//     o DATA_STRUCTURE_NAME
-//     o Whether the DS is qualified or not
-//     o Data structure arrays size (DIM or OCCURS)
-//     o The parent of this DS (if it has one)
-// This will be stored with type datastruct.
+/// Parse and store a data structure definition into REPLVARS.
+///
+/// Extracts the DS name, qualified attribute, array size (DIM/OCCURS),
+/// and parent data structure (for nested DS).
+///
+/// @param code The DCL-DS line of code.
+/// @param scope The current scope (MAIN or procedure name).
+/// @param parentDataStructure Parent DS name for nested structures.
+/// @return The data structure name.
 dcl-pr storeDataStructureDefinition like(t_variable.name);
   code like(t_longLineOfCode) const;
   scope like(t_variable.scope) const;
   parentDataStructure like(t_variable.name) const;
 end-pr;
 
-// Given a complete line of code containing a variable
-//   definition (defined with DCL-S), extract and store
-//   the following information to the REPLVARS table:
-//     o VARIABLE_NAME
-//     o VARIABLE_TYPE:
-//       o character
-//       o numeric
-//       o indicator
-//       o date
-//       o time
-//       o timestamp
-//     o Data structure arrays size (DIM or OCCURS)
-// This will be stored with type datastruct.
+/// Parse and store a standalone variable definition into REPLVARS.
+///
+/// Extracts the variable name, type (character/numeric/indicator/date/time/timestamp),
+/// and array size.
+///
+/// @param code The DCL-S line of code.
+/// @param parentDataStructure Parent DS name if this is a subfield.
+/// @param scope The current scope.
 dcl-pr storeVariableDefinition;
   code like(t_longLineOfCode) const;
   parentDataStructure like(t_variable.name) const;
   scope like(t_variable.scope) const;
 end-pr;
 
-// Given a complete line of code containing a constant
-//   definition (defined with DCL-C), extract and store
-//   the following information to the REPLVARS table:
-//     o VARIABLE_NAME
-//     o VARIABLE_TYPE:
-//       o constant
+/// Parse and store a named constant definition into REPLVARS.
+///
+/// @param code The DCL-C line of code.
+/// @param scope The current scope.
 dcl-pr storeConstantDefinition;
   code like(t_longLineOfCode) const;
   scope like(t_variable.scope) const;
 end-pr;
 
-// Given a variable name, extract all related data currently
-//   stored in the REPLVARS table.
-// System indicators (such as *IN99) are not stored to the
-//   database, but will return a valid object.
-// If the variable cannot be found in the database,
-//   a blank variable type is returned.
-// This function is case-insensitive.
+/// Look up a variable by name and scope in REPLVARS.
+///
+/// System indicators (*INxx) return a valid indicator-type object without
+/// a database lookup. If the variable is not found in the given scope,
+/// the MAIN scope is checked as a fallback.
+///
+/// @param variableName The variable name to look up (case-insensitive).
+/// @param scope The scope to search first.
+/// @return The variable metadata (blank type if not found).
 dcl-pr fetchStoredVariable likeds(t_variable);
   variableName like(t_variable.name) const;
   scope like(t_variable.scope) const;
 end-pr;
 
-// Given a complete line of code, determine the name of the
-//   variable being evaluated. 
+/// Extract the variable name from the left side of an assignment statement.
+///
+/// @param code The line of code containing an assignment.
+/// @return The variable name.
 dcl-pr fetchVariableNameFromStatement like(t_variable.name);
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Given a complete line of code, determine the name of the
-//   variable being printed. 
+/// Extract the variable name from a replPrint() call.
+///
+/// @param code The replPrint() line of code.
+/// @return The variable name being printed.
 dcl-pr fetchVariableNameFromReplPrintStatement like(t_variable.name);
   code like(t_longLineOfCode) value;
 end-pr;
 
-// Given a complete line of code, determine the name of the
-//   variable being checked. 
+/// Extract the variable name from a replEquals() call.
+///
+/// @param code The replEquals() line of code.
+/// @return The variable name being tested.
 dcl-pr fetchVariableNameFromReplEqualsStatement like(t_variable.name);
   code like(t_longLineOfCode) value;
 end-pr;
 
-// Given a complete line of code, determine the value of the
-//   variable being checked. 
+/// Extract the expected value from a replEquals() call.
+///
+/// @param code The replEquals() line of code.
+/// @return The expected value string.
 dcl-pr fetchVariableExpectedValueFromReplEqualsStatement like(t_longLineOfCode);
   code like(t_longLineOfCode) value;
 end-pr;
 
-// Given a complete line of code such as:
-//   myVariable(1) = someOther;
-// Extract the element referred to by the result variable.
-//   In the above example, the returned value would be 1.
-// If no element is found or specified (including (*)), then
-//   a zero value is returned.
+/// Extract the array element index from a statement like myVar(3) = x.
+///
+/// Returns 0 if no element is specified or if (*) is used.
+///
+/// @param code The line of code.
+/// @return The 1-based array element index, or 0.
 dcl-pr fetchArrayElementFromStatement like(t_variable.arraySize);
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Given a data structure name, prepare an SQL cursor to return
-//   each of the subfields.
-// The results can be returned using fetchedDataStructureFields.
-// This function is case-insensitive.
+/// Open a cursor to list all subfields of a data structure.
+///
+/// @param dataStructureName The DS name to list fields for (case-insensitive).
+/// @param scope The scope to search in.
 dcl-pr prepareListOfDataStructureFields;
   dataStructureName like(t_variable.name) const;
   scope like(t_variable.scope) const;
 end-pr;
 
-// Return each of the subfields belonging to a single data structure.
-// This function should be prepared with
-//   prepareListOfDataStructureFields.
+/// Fetch the next subfield from the prepared data structure fields cursor.
+///
+/// @param variable Output: the subfield variable metadata.
+/// @return *on if a row was fetched.
 dcl-pr fetchedDataStructureFields ind;
   variable likeds(t_variable);
 end-pr;
 
-// Prepare an SQL cursor to return all of the declared variables
-//   and data structures.
-// The results can be returned using fetchListOfVariables.
+/// Open a cursor to list all declared variables and data structures.
 dcl-pr prepareListOfVariables end-pr;
 
-// Return each of the declared variables.
-// This function should be prepared with prepareListOfVariables.
+/// Fetch the next variable from the prepared variables cursor.
+///
+/// @param variable Output: the variable metadata.
+/// @return *on if a row was fetched.
 dcl-pr fetchListOfVariables ind;
   variable likeds(t_variable);
 end-pr;
 
-// Grab the procedure name from a DCL-PROC line of code.
+/// Extract a procedure name from a DCL-PROC line.
+///
+/// @param code The DCL-PROC line of code.
+/// @return The procedure name.
 dcl-pr fetchProcedureNameFromStatement like(t_variable.scope);
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Does the string start dcl-proc?
+/// Detect a procedure declaration (DCL-PROC).
+///
+/// @param code The line of code.
+/// @return *on if DCL-PROC was found.
 dcl-pr procedureDeclarationFound ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Does the string start dcl-pi?
+/// Detect the start of a procedure interface (DCL-PI).
+///
+/// @param code The line of code.
+/// @return *on if DCL-PI was found.
 dcl-pr procedureInterfaceStart ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Does the string start end-pi?
+/// Detect the end of a procedure interface (END-PI).
+///
+/// @param code The line of code.
+/// @return *on if END-PI was found.
 dcl-pr procedureInterfaceEnd ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// If we're using a variable, flag it here so that we'll
-// generate the helper procedures to record the result.
-// This should help cut down on the volume of broken procedures
-// we generate
+/// Mark a variable as used so that evaluation helper procedures are generated for it.
+///
+/// @param variableId The REPLVARS.variable_id to mark.
 dcl-pr markVariableAsUsed;
   variableId like(t_variable.id) const;
 end-pr;

@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPL_EVAL
+/// @brief Statement evaluator implementation.
+///
+/// Identifies the type of each pseudo code statement (conditional, assignment,
+/// loop, SQL, replPrint, replEquals) and generates the corresponding evaluation
+/// code that calls REPL_HLPR procedures or dynamically-created variable
+/// result helpers.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 

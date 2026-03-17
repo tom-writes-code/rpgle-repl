@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPLWRPR
+/// @brief External wrapper program for batch/CI execution.
+///
+/// Called from shell scripts or external tools to generate, compile,
+/// and run REPL snippets non-interactively. Accepts a source location
+/// or named snippet, a verbosity level, and an external session ID
+/// for result correlation. Returns 0 for success, -1 for failure.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked);
 
