@@ -5,7 +5,7 @@
 /EndIf
 /Define REPL_GEN
 
-/include qrpgleref,repl_pseut
+/include repl_pseut
 
 /// @file REPL_GEN
 /// @brief Source generator - transforms pseudo code into compilable SQLRPGLE source.

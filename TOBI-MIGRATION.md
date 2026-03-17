@@ -41,8 +41,6 @@ RNMOBJ OBJ(REPLBOB) OBJTYPE(*LIB) NEWOBJ(RPGLEREPL)
 
 ## Flow 1: User Build (compile from source)
 
-From the IFS project directory:
-
 ```bash
 cd /path/to/rpgle-repl
 makei build

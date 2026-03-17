@@ -5,11 +5,7 @@
 /Endif
 /Define REPL_HLPR
 
-/if defined(STMF_COMPILE)
 /include repl_pseut
-/else
-/include qrpgleref,repl_pseut
-/endif
 
 /// @file REPL_HLPR
 /// @brief Runtime helpers - called by the generated REPL program to record execution results.

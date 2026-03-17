@@ -1,5 +1,3 @@
-REFs := QRPGLEREF.FILE/REPL_HLPR.MBR QRPGLEREF.FILE/REPL_PSEUT.MBR
-
 REPLCMD.MODULE: REPLCMD.SQLRPGLE
 REPLLOAD.MODULE: REPLLOAD.RPGLE
 REPL_CMPL.MODULE: REPL_CMPL.SQLRPGLE
@@ -14,26 +12,3 @@ REPL_USR.MODULE: REPL_USR.RPGLE
 REPL_VARS.MODULE: REPL_VARS.SQLRPGLE
 REPLWRPR.MODULE: REPLWRPR.SQLRPGLE
 REPLPRTR.MODULE: REPLPRTR.SQLRPGLE
-
-
-QRPGLEREF.FILE:
-	$(call echo_cmd,"=== Creating source PF [$(notdir $@)]")
-	$(eval crtcmd := CRTSRCPF FILE($(OBJLIB)/$(basename $(@F))) RCDLEN(112) CCSID(37) )
-	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-
-QRPGLEREF.FILE/REPL_HLPR.MBR: $(d)/REPL_HLPR.RPGLEINC | QRPGLEREF.FILE
-	$(call echo_cmd,"=== Creating ref member [$(notdir $@)]")
-	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('/QSYS.LIB/$(OBJLIB).LIB/$@') MBROPT(*REPLACE) )
-	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-
-QRPGLEREF.FILE/REPL_PSEUT.MBR: $(d)/REPL_PSEUT.RPGLEINC | QRPGLEREF.FILE
-	$(call echo_cmd,"=== Creating ref member [$(notdir $@)]")
-	$(eval crtcmd := CPYFRMSTMF FROMSTMF('$<') TOMBR('/QSYS.LIB/$(OBJLIB).LIB/$@') MBROPT(*REPLACE) )
-	@$(PRESETUP) \
-	$(SCRIPTSPATH)/launch "$(JOBLOGFILE)" "$(crtcmd)" >> $(LOGFILE) 2>&1 && $(call logSuccess,$@) || $(call logFail,$@)
-
-
-refs: $(REFs)
-all:: refs
