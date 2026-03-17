@@ -91,7 +91,7 @@ fi
 verbose=${verbose:-0}
 force=${force:-0}
 version=${version:-latest}
-app_lib=${app_lib:-RPGREPL}
+app_lib=${app_lib:-RPGLEREPL}
 app_lib=${app_lib^^}
 savf_lib=${savf_lib:-QGPL}
 savf_lib=${savf_lib^^}

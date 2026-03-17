@@ -136,22 +136,28 @@ migration guide from the previous BOB (Better Object Builder) setup.
 
 ```bash
 # On the IBM i, from the project IFS directory:
-tobi build
+makei build
+```
+
+For a distributable save file (developer release):
+
+```bash
+./package.sh
 ```
 
 ### Project Structure
 
 ```
 iproj.json           TOBI project configuration
-bnd/                 Binding source (.BND) and SRVPGM configs (.ibmi.json)
+bnd/                 Binding source (.BND files)
 cmd/                 CL command definitions (.CMDSRC)
 db/                  SQL table definitions (.TABLE)
 dsp/                 Display file DDS (.DSPF)
 rpgle/               RPG source (.RPGLE, .SQLRPGLE) and includes (.RPGLEINC)
-  *.ibmi.json        TOBI build configs for PGMs
-install.sh           One-step installation script
+install.sh           One-step installation script (end-user)
+package.sh           Build and package a distributable save file (developer)
 replwrpr.sh          Shell wrapper for batch execution
-TOBI-MIGRATION.md    Guide for migrating from BOB to TOBI
+TOBI-MIGRATION.md    Full build guide (TOBI setup, flows, troubleshooting)
 ```
 
 ### Source Documentation
