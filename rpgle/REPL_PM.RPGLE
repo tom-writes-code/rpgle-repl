@@ -1,5 +1,13 @@
 **FREE
 
+/// @file REPL_PM
+/// @brief Program message handling implementation.
+///
+/// Provides throw() and catch() for sending and receiving escape messages
+/// between procedures using the QMHSNDPM and QMHRCVPM system APIs.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt) noMain;
 
 /include repl_pm

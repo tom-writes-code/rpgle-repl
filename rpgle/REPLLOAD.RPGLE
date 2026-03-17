@@ -1,5 +1,14 @@
 **FREE
 
+/// @file REPLLOAD
+/// @brief Snippet browser and loader program.
+///
+/// Displays saved and unsaved snippets in a subfile list, allowing
+/// the user to load a snippet into the current session or delete
+/// owned snippets. Supports filtering by user profile.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked);
 

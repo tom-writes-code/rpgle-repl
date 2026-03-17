@@ -5,41 +5,55 @@
 /Endif
 /Define REPL_USR
 
+/// @file REPL_USR
+/// @brief User actions - run programs, display source, debug, spool files, and CL commands.
+/// @author Tom Sharp
+
+/// Error code: program threw an exception at runtime.
 dcl-c c_program_exception 'rpl0003';
+/// Error code: could not display the generated source.
 dcl-c c_error_showing_generated_source 'rpl0004';
+/// Error code: could not start debug mode.
 dcl-c c_problem_starting_debug 'rpl0005';
+/// Error code: could not display spool files.
 dcl-c c_problem_showing_spool_files 'rpl0006';
+/// Error code: could not display the job log.
 dcl-c c_problem_showing_job_log 'rpl0007';
+/// Error code: could not open the command line.
 dcl-c c_problem_showing_command_line 'rpl0008';
 
-// Run the generated program object. The location and name
-//   of this are defined as c_generatedSourceLibrary
-//   and c_generatedProgram.
+/// Run the generated REPL program (c_generatedSourceLibrary/c_generatedProgram).
 dcl-pr runGeneratedProgramObject end-pr;
 
-// Show the generated source object. The location and name
-//   of this are defined as c_generatedSourceLibrary,
-//   c_generatedSourceFile, and c_generatedSourceMember.
-// The source is shown using DSPPFM.
+/// Display the generated source member using DSPPFM.
 dcl-pr showGeneratedSourceObject end-pr;
 
-// Debug the generated source object. The location and name
-//   of this are defined as c_generatedSourceLibrary,
-//   c_generatedSourceFile, and c_generatedSourceMember.
-// An environment variable to show debug mode in a 27x132 screen
-//   is automatically applied. SUTIL/DBG is used to start
-//   the debug mode.
+/// Start interactive debug on the generated source using STRDBG.
+///
+/// Automatically sets the 27x132 debug environment variable.
 dcl-pr debugGeneratedSourceObject end-pr;
 
-// Show the user their latest spool files by running SUTIL/SP5.
+/// Display the current user's spool files.
 dcl-pr showUserSpoolFiles end-pr;
 
-// Show the user a command line interface.
+/// Open an interactive CL command line (QCMD).
 dcl-pr showCommandLine end-pr;
 
-// Show the user their current job log.
+/// Display the current job log.
 dcl-pr showJobLog end-pr;
 
+/// Execute a CL command string with up to 6 substitution parameters.
+///
+/// Parameters &1 through &6 in the command string are replaced with the
+/// corresponding parm values.
+///
+/// @param command The CL command template with &1-&6 placeholders.
+/// @param parm1 Substitution value for &1 (optional).
+/// @param parm2 Substitution value for &2 (optional).
+/// @param parm3 Substitution value for &3 (optional).
+/// @param parm4 Substitution value for &4 (optional).
+/// @param parm5 Substitution value for &5 (optional).
+/// @param parm6 Substitution value for &6 (optional).
 dcl-pr runCommand;
   command varchar(1024) const;
   parm1 varchar(100) const options(*nopass);
@@ -50,6 +64,16 @@ dcl-pr runCommand;
   parm6 varchar(100) const options(*nopass);
 end-pr;
 
+/// Format a message string by replacing &1-&6 placeholders with parameter values.
+///
+/// @param message The message template containing &1-&6 placeholders.
+/// @param parm1 Substitution value for &1.
+/// @param parm2 Substitution value for &2 (optional).
+/// @param parm3 Substitution value for &3 (optional).
+/// @param parm4 Substitution value for &4 (optional).
+/// @param parm5 Substitution value for &5 (optional).
+/// @param parm6 Substitution value for &6 (optional).
+/// @return The formatted message string.
 dcl-pr formatString varchar(1024);
   message varchar(1024) const;
   parm1  varchar(100) const;

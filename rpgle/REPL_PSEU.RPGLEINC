@@ -8,193 +8,250 @@
 /include repl_eval
 /include repl_pseut
 
+/// @file REPL_PSEU
+/// @brief Pseudo code storage - manages snippet CRUD, results, control statements, and comment handling.
+/// @author Tom Sharp
+
+/// Maximum number of control statement lines (ctl-opt).
 dcl-c c_control_statements 3;
+
+/// Holds up to 3 lines of control statement (ctl-opt) configuration.
 dcl-ds t_controlStatement qualified template;
   statement like(t_lineOfCode.code) dim(c_control_statements);  
 end-ds;
 
 dcl-s t_sourceType char(10) template;
-// Code which should sit with the `ctl-opt` section
+/// Source type: code that belongs in the ctl-opt section.
 dcl-c c_control_statement 'control';
-// Code which should sit after the /include qrpgleref,repl_hlpr line
+/// Source type: code that belongs after the /include qrpgleref,repl_hlpr line.
 dcl-c c_mainline_code 'mainline';
 
-// Clear the current session existing code from the
-//   REPLSRC table.
+/// Clear the current session's pseudo code from the REPLSRC table.
+///
+/// @param sourceType Which source type to clear (c_control_statement or c_mainline_code).
+/// @param sessionId Optional session ID override (defaults to current job name).
 dcl-pr clearSessionPseudoCode;
   sourceType like(t_sourceType) const;
   sessionId char(28) const options(*nopass);
 end-pr;
-// Clear the current session existing results from the
-//   REPLRSLT table.
+
+/// Clear the current session's execution results from the REPLRSLT table.
+///
+/// @param sessionId Optional session ID override.
 dcl-pr clearSessionPseudoResults;
   sessionId char(28) const options(*nopass);
 end-pr;
-// Clear the current session existing variables from the
-//   REPLVARS table.
+
+/// Clear the current session's variable definitions from the REPLVARS table.
+///
+/// @param sessionId Optional session ID override.
 dcl-pr clearSessionPseudoVariables;
   sessionId char(28) const options(*nopass);
 end-pr;
 
-// Prepare a cursor to return all the existing code for this
-//   session from the REPLSRC table.
-// This will not include any lines after the last non-blank
-//   line.
-// The code can be returned with fetchLineOfPseudoCode.
+/// Open a cursor to fetch all non-trailing-blank code lines for this session.
+///
+/// @param sourceFile Optional override source location to read from instead of the session.
+/// @param startingLine Optional line number to start fetching from.
 dcl-pr prepareFetchLinesOfPseudoCode;
   sourceFile likeds(t_sourceLocation) const options(*nopass);
   startingLine like(t_lineOfCode.line) const options(*nopass);
 end-pr;
 
-// Return all the existing code for this session from the
-//   REPLSRC table.
-// This must be prepared with prepareFetchLinesOfPseudoCode.
+/// Fetch the next line of pseudo code from the prepared cursor.
+///
+/// Must be preceded by a call to prepareFetchLinesOfPseudoCode().
+///
+/// @param lineOfCode Output: the fetched line number and code.
+/// @param replCode *on if reading from the REPL session table; *off for external source.
+/// @param iSourceLocation Optional source location context.
+/// @return *on if a row was fetched; *off if no more rows.
 dcl-pr fetchLineOfPseudoCode ind;
   lineOfCode likeds(t_lineOfCode);
   replCode ind const;
   iSourceLocation likeds(t_sourceLocation) const options(*nopass);
 end-pr;
 
-// Add a single line of code for this session to the REPLSRC table.
+/// Store a single line of pseudo code into the REPLSRC table for this session.
+///
+/// @param sourceType The source type (c_control_statement or c_mainline_code).
+/// @param lineOfCode The line number and code to store.
 dcl-pr storeLineOfPseudoCode;
   sourceType like(t_sourceType) const;
   lineOfCode likeds(t_lineOfCode) const;
 end-pr;
 
-// Insert a new blank line for this session in the REPLSRC table.
-// This can be inserted between existing lines of code. Subsequent
-// lines of code will have their line number incremented.
+/// Insert a new blank line at the given position, pushing subsequent lines down.
+///
+/// @param line The line number at which to insert the blank line.
 dcl-pr insertNewLineOfPseudoCode;
   line like(t_lineOfCode.line) const;
 end-pr;
 
-// Split an existing line for this session in the REPLSRC table.
-// Subsequent lines of code will have their line number incremented.
+/// Split a line of code at the given column, creating a new line below.
+///
+/// @param line The line number to split.
+/// @param column The column position at which to split (1-71).
 dcl-pr splitLineOfPseudoCode;
   line like(t_lineOfCode.line) const;
   column packed(3) const;
 end-pr;
 
-// Delete a line for this session in the REPLSRC table.
-// Subsequent lines will have their line number decremented.
+/// Delete a line and renumber subsequent lines downward.
+///
+/// @param line The line number to delete.
 dcl-pr deleteLineOfPseudoCode;
   line like(t_lineOfCode.line) const;
 end-pr;
 
-// Prepare a cursor to return all stored results for this session
-//   and line number in the REPLRSLT table.
-// Results can be returned using fetchResultForLineOfCode.
+/// Open a cursor to fetch all results for a specific line in this session.
+///
+/// @param line The pseudo code line number to fetch results for.
 dcl-pr prepareFetchResultForLineOfCode;
   line like(t_lineOfCode.line) const;
 end-pr;
 
-// Prepare a cursor to return all stored results for this session
-// Results can be returned using fetchResultForAllLinesOfCode.
+/// Open a cursor to fetch all results for an external session.
+///
+/// @param externalSessionId The external session identifier.
 dcl-pr prepareFetchResultForAllCode;
   externalSessionId varchar(28) const;
 end-pr;
 
-// Return each of the results for a single line number and this
-//   session in the REPLRSLT table.
-// This must be prepared with prepareFetchResultForLineOfCode.
+/// Fetch the next result for a single line. Must be prepared with prepareFetchResultForLineOfCode().
+///
+/// @param result Output: the result type and text.
+/// @return *on if a row was fetched.
 dcl-pr fetchResultForLineOfCode ind;
   result likeds(t_replResult);
 end-pr;
 
-// Return each of the results for a single line number and this
-//   session in the REPLRSLT table.
-// This must be prepared with prepareFetchResultForAllCode.
+/// Fetch the next result for all lines. Must be prepared with prepareFetchResultForAllCode().
+///
+/// @param result Output: the result type, text, and line number.
+/// @return *on if a row was fetched.
 dcl-pr fetchResultForAllLinesOfCode ind;
   result likeds(t_replResult);
 end-pr;
 
-// Housework: Remove any snippets from the database which are
-//  completely blank.
+/// Remove any completely blank snippets from the REPLSRC table.
 dcl-pr removeUnusedSnippets end-pr;
 
-// Prepare a list of stored snippets for a particular user,
-//  or blank for all users.
-// The indicators allows you to specify whether snippets
-//  stored to a particular session, or to a particular
-//  save name should be returned.
+/// Open a cursor to list stored snippets for a particular user.
+///
+/// @param snippetsForUser User profile to filter by (blank for all users).
+/// @param savedSnippets *on for named saves; *off for session-only snippets.
 dcl-pr prepareFetchStoredSnippets;
   snippetsForUser char(10) const;
   savedSnippets ind const;
 end-pr;
 
-// Fetch the next stored snippet given the parameters
-//  specified in prepareFetchStoredSnippets
+/// Fetch the next stored snippet from the prepared cursor.
+///
+/// @param storedSnippet Output: the snippet metadata.
+/// @return *on if a row was fetched.
 dcl-pr fetchStoredSnippets ind;
   storedSnippet likeds(t_storedSnippet);
 end-pr;
 
-// Store the contents of the current session to a save file
-//  belonging to the current user.
-// Overwrites any existing save files with the same name
-//  belonging to the current user.
+/// Save the current session's code as a named snippet, overwriting any existing save with the same name.
+///
+/// @param saveFile The name to save the snippet under (up to 20 characters).
 dcl-pr storeSessionToSaveFile;
   saveFile char(20) const;
 end-pr;
 
-// Restores a selected save file to the current session.
+/// Load a named snippet into the current session, replacing any existing code.
+///
+/// @param owner The user profile that owns the snippet.
+/// @param saveFile The snippet save name.
 dcl-pr restoreSaveFileToSession;
   owner char(10) const;
   saveFile char(20) const;
 end-pr;
 
-// Restores a selected save file to the current session.
+/// Load another session's code into the current session.
+///
+/// @param sessionId The source session ID to copy from.
 dcl-pr restoreSessionToSession;
   sessionId char(28) const;
 end-pr;
 
-// Checks if a particular save file exists for a given owner.
+/// Check whether a named snippet exists for a given owner.
+///
+/// @param owner The user profile to check.
+/// @param saveFile The snippet save name.
+/// @return *on if the snippet exists.
 dcl-pr saveFileExistsForOwner ind;
   owner char(10) const;
   saveFile char(20) const;
 end-pr;
 
-// Deletes a particular save file for a given owner.
+/// Delete a named snippet for a given owner.
+///
+/// @param owner The user profile that owns the snippet.
+/// @param saveFile The snippet save name.
 dcl-pr deleteSaveFileForOwner;
   owner char(10) const;
   saveFile char(20) const;
 end-pr;
 
-// Fetch the organisation default control statement.
-// This exists in replsrc with type "control", and will have a null
-// session ID, save name, and session ID. There is no maintenance
-// function for setting this, but it can be manually added to the file.
+/// Fetch the organisation-wide default control statement.
+///
+/// Stored in REPLSRC with type 'control', null session ID and null save name.
+/// There is no UI to set this; it must be inserted manually.
+///
+/// @return The control statement (up to 3 lines of ctl-opt).
 dcl-pr fetchOrganisationControlStatementDefault likeds(t_controlStatement);
 end-pr;
 
-// Fetch the user default control statement.
-// This exists in replsrc with type "control", and will have a null
-// session ID and save name. 
+/// Fetch the current user's default control statement.
+///
+/// Stored in REPLSRC with type 'control', null session ID.
+///
+/// @return The control statement.
 dcl-pr fetchUserControlStatementDefault likeds(t_controlStatement);
 end-pr;
 
-// Fetch the session control statement.
-// This exists in replsrc with type "control", and will have the relevant
-// session ID.
+/// Fetch the session-specific control statement.
+///
+/// @return The control statement for this session.
 dcl-pr fetchSessionControlStatement likeds(t_controlStatement);
 end-pr;
 
-// Store the current control statement to be the user default.
+/// Store the given control statement as the current user's default.
+///
+/// @param controlStatement The control statement to save.
 dcl-pr storeUserControlStatementDefault;
   controlStatement likeds(t_controlStatement) const;
 end-pr;
 
-// Store the current control statement to this session.  
+/// Store the given control statement for this session only.
+///
+/// @param controlStatement The control statement to save.
 dcl-pr storeSessionControlStatement;
   controlStatement likeds(t_controlStatement) const;
 end-pr;
 
-// strip any comments from a line of code, and pass it back
-// if execSql is on, then we will also treat -- as a comment
+/// Strip comments from a line of code and return the cleaned version.
+///
+/// Handles //, /*, and optionally -- (when inside exec sql blocks).
+///
+/// @param lineOfCode The line to strip comments from.
+/// @param execSql *on to also treat -- as a comment delimiter.
+/// @return The line with comments removed.
 dcl-pr stripComments likeds(t_lineOfCode);
   lineOfCode likeds(t_lineOfCode) value;
   execSql ind const;
 end-pr;
 
+/// String-literal-aware scan. Works like %scan but ignores matches inside quoted strings.
+///
+/// @param searchArgument The string to search for.
+/// @param sourceString The string to search within.
+/// @param startPosition Optional start position (omittable).
+/// @param length Optional search length (omittable).
+/// @return The position of the first match outside string literals, or 0 if not found.
 dcl-pr @scan packed(5);
   searchArgument varchar(65535) const;
   sourceString varchar(65535) value;

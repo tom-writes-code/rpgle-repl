@@ -1,0 +1,9 @@
+{
+  "build": {
+    "objtype": "*PGM",
+    "module": ["REPL"],
+    "bndSrvPgm": ["REPL_PM", "REPL_CMPL", "REPL_PSEU", "REPL_GEN", "REPL_USR", "REPL_INS"],
+    "actGrp": "*NEW",
+    "text": "repl-rpg Interactive REPL Terminal"
+  }
+}

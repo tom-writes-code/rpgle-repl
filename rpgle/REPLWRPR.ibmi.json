@@ -1,0 +1,8 @@
+{
+  "build": {
+    "objtype": "*PGM",
+    "module": ["REPLWRPR"],
+    "bndSrvPgm": ["REPL_CMPL", "REPL_EVAL", "REPL_GEN", "REPL_HLPR", "REPL_PSEU", "REPL_USR"],
+    "text": "repl-rpg External Wrapper"
+  }
+}

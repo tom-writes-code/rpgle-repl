@@ -1,5 +1,16 @@
 **FREE
 
+/// @file REPL_PSEU
+/// @brief Pseudo code storage implementation.
+///
+/// Manages all CRUD operations for the user's pseudo code (REPLSRC),
+/// execution results (REPLRSLT), snippet save/load/delete, control
+/// statement defaults (organisation, user, and session levels), and
+/// provides the string-literal-aware @scan procedure and comment
+/// stripping logic.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 

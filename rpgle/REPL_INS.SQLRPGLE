@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPL_INS
+/// @brief Source line insertion implementation.
+///
+/// Writes individual lines of generated code into the source physical
+/// file member via SQL alias, adjusting leading blanks for free-format
+/// vs fixed-format RPG. Isolated in its own service program with no
+/// REPL dependencies to prevent circular binding.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 

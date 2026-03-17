@@ -1,0 +1,7 @@
+{
+  "build": {
+    "objtype": "*FILE",
+    "srcType": "RPGLE",
+    "text": "repl-rpg Reference Source for Generated Code"
+  }
+}

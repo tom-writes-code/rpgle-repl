@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPL
+/// @brief Main interactive REPL terminal program.
+///
+/// Provides the 5250 display-based interface for writing, compiling,
+/// and running ILE RPG code snippets interactively. Manages the subfile
+/// of code lines, display of results, cursor positioning, function key
+/// handling, snippet save/load, and control statement editing.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) main(main);
 

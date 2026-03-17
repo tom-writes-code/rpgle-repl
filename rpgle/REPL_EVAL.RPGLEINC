@@ -8,39 +8,38 @@
 /include repl_pseu
 /include repl_vars
 
-// if, else, elseif, when, other
+/// @file REPL_EVAL
+/// @brief Statement evaluator - identifies statement types and generates evaluation code.
+/// @author Tom Sharp
+
+/// Trigger type: conditional (if, else, elseif, when, other, on-error).
 dcl-c c_conditionalStatement 'CON';
-// a = b
+/// Trigger type: value assignment (a = b).
 dcl-c c_setValueStatement 'VAL';
-// dow, dou, for
+/// Trigger type: loop (dow, dou, for).
 dcl-c c_loopStatement 'LOP';
-// exec sql
+/// Trigger type: embedded SQL (exec sql).
 dcl-c c_sqlStatement 'SQL';
-// replPrint(
+/// Trigger type: replPrint() call.
 dcl-c c_replPrintStatement 'PRT';
-// replEquals(
+/// Trigger type: replEquals() assertion call.
 dcl-c c_replEqualsStatement 'EQL';
 
 dcl-s t_triggerType char(3) template;
 
-// Given the line number of code just posted, and the meta-data
-//   of what it was, insert the relevant evaluation code.
-// Required meta-data required:
-//   o Trigger type:
-//     o c_conditionalStatement
-//     o c_setValueStatement
-//     o c_loopStatement
-//     o c_sqlStatement
-//     o c_replPrintStatement
-//     o c_replEqualsStatement
-//   o Variable name (not include array element)
-//   o Current Scope
-//   o Expected value (replEquals only)
-// Conditional, Loop, SQL, and Set Value statements
-//   where the variable is of an unknown type can be
-//   evaluated using the existing REPL_HLPR procedures.
-// Set Value statements will call evaluation procedures
-//   which will be dynamically created later in the process.
+/// Insert evaluation code for a line of pseudo code.
+///
+/// Given the line number and metadata describing the statement, generates
+/// and inserts the appropriate helper call into the generated source. For
+/// conditionals, loops, SQL, and unknown-type assignments the built-in
+/// REPL_HLPR procedures are used. For known-type assignments, dynamically
+/// created evaluation procedures (generated later in the pipeline) are called.
+///
+/// @param line The pseudo code line number being evaluated.
+/// @param triggerType The statement classification (CON/VAL/LOP/SQL/PRT/EQL).
+/// @param variableName The variable being evaluated (without array element).
+/// @param scope The current scope (MAIN or procedure name).
+/// @param expectedValue The expected value for replEquals assertions (optional).
 dcl-pr evaluateLineOfPseudoCode;
   line like(t_lineOfCode.line) const;
   triggerType like(t_triggerType) const;
@@ -49,74 +48,56 @@ dcl-pr evaluateLineOfPseudoCode;
   expectedValue like(t_longLineOfCode) const options(*nopass);
 end-pr;
 
-// Given a complete line of code, determine whether it is a
-//   valid free format line, and return the type.
-// A line is considered free format if is starts with the
-//   following strings (separated by trigger type)
-//   o c_conditionalStatement
-//     o 'IF '
-//     o 'ELSE '
-//     o 'ELSE;'
-//     o 'ELSEIF '
-//     o 'WHEN '
-//     o 'OTHER '
-//     o 'OTHER;'
-//     o 'ON-ERROR;'
-//   o c_sqlStatement
-//     o 'EXEC SQL'
-//   o c_loopStatement
-//     o 'DOW '
-//     o 'DOU '
-//     o 'FOR '
-// A line is also considered free format if it contains
-//   the following symbols anywhere in the string.
-//   o c_setValueStatement
-//     o '='
-// This function is not case sensitive.
+/// Determine whether a line of code is a recognisable free-format statement.
+///
+/// Returns *on if the line starts with a known keyword (IF, ELSE, ELSEIF,
+/// WHEN, OTHER, ON-ERROR, EXEC SQL, DOW, DOU, FOR) or contains an assignment
+/// operator (=). The trigger type output parameter is set accordingly.
+/// Case-insensitive.
+///
+/// @param code The complete line of code to analyse.
+/// @param triggerType Output: the detected trigger type constant.
+/// @return *on if a free-format evaluation was identified.
 dcl-pr freeFormatEvaluationFound ind;
   code like(t_longLineOfCode) const;
   triggerType like(t_triggerType);
 end-pr;
 
-// Given a complete line of free format code, is the closing
-//   character a semi-colon?
+/// Check whether a free-format line ends with a semicolon.
+///
+/// @param code The complete line of code.
+/// @return *on if the last non-blank character is a semicolon.
 dcl-pr endOfFreeFormatLineFound ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Given a single line of code, do the opening characters imply that
-//   this is a comment line.
-// The following characters imply comment lines:
-//   o *
-//   o //
-//   o --
-//   o /*
+/// Determine whether a line of code is a comment.
+///
+/// Checks for leading *, //, --, or /* characters.
+///
+/// @param code The line of code to check.
+/// @return *on if the line is a comment.
 dcl-pr codeIsComment ind;
   code like(t_lineOfCode.code) const;
 end-pr;
 
-// Given a single line of code, do the opening characters imply that
-//   this is a repl helpers
-// The following characters imply helpers:
-//   o replPrint(
-//   o replEquals(
+/// Determine whether a line is a REPL helper call (replPrint or replEquals).
+///
+/// @param code The line of code to check.
+/// @return *on if code starts with replPrint( or replEquals(.
 dcl-pr codeIsReplHelper ind;
   code like(t_longLineOfCode) const;
 end-pr;
 
-// Add the result evaluation helpers. This will read through each
-//   of the variables in the pseudo code, and create a procedure
-//   in the generated code of the form:
-//     o replResult_MYVARIABLE_single
-//     o replResult_MYVARIABLE_multiple
-// Single or Multiple will depend on whether the evaluated object
-//   is an array or not.
-// For data structures, the generated procedure will call the
-//   underlying standalone variable procedures.
-// For standalone variables, the result will be added to the
-//   REPL_RESULT table.
-// All variables will have a helper procedure created, regardless
-//   of whether or not the variable is evaluated within the program.
+/// Generate result evaluation helper procedures for all declared variables.
+///
+/// Reads through every variable stored for this session and creates
+/// procedures in the generated source of the form:
+///   - repl_SCOPE_VARIABLEID_single (for scalar variables)
+///   - repl_SCOPE_VARIABLEID_multiple (for array variables)
+///
+/// For data structures, the generated procedure calls the underlying
+/// standalone-variable procedures for each subfield.
 dcl-pr replresultEvaluationHelpers end-pr;
 
 // Separate a /copy or /include statement into the component parts

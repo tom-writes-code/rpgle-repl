@@ -5,16 +5,28 @@
 /Endif
 /Define REPL_PM
 
+/// @file REPL_PM
+/// @brief Program message handling - send and receive escape messages between procedures.
+/// @author Tom Sharp
+
+/// Error to be thrown as an escape message.
 dcl-ds t_thrownError qualified template;
   errorCode char(7);
 end-ds;
 
+/// Error received from an escape message.
 dcl-ds t_caughtError qualified template;
   errorCode char(7);
 end-ds;
 
+/// Send an escape message to the caller using QMHSNDPM.
+///
+/// @param thrownError The error structure containing the 7-character error code.
 dcl-pr throw;
   thrownError likeds(t_thrownError) value;
 end-pr;
 
+/// Receive the most recent escape message using QMHRCVPM.
+///
+/// @return The caught error structure containing the 7-character error code.
 dcl-pr catch likeds(t_caughtError) end-pr;

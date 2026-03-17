@@ -1,5 +1,16 @@
 **FREE
 
+/// @file REPL_GEN
+/// @brief Source generator implementation.
+///
+/// Transforms the user's pseudo code into a complete, compilable SQLRPGLE
+/// source member. Processes each line, resolving /include and /copy
+/// references, tracking variable declarations and procedure scoping,
+/// and generating dynamic result-recording helper procedures for every
+/// tracked variable.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 

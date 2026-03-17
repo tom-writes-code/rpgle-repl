@@ -1,0 +1,8 @@
+{
+  "build": {
+    "objtype": "*SRVPGM",
+    "module": ["REPL_CMPL"],
+    "bndSrvPgm": ["REPL_PM", "REPL_USR"],
+    "text": "repl-rpg Compile Module / Program Objects"
+  }
+}

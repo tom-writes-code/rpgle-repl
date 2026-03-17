@@ -1,5 +1,15 @@
 **FREE
 
+/// @file REPL_VARS
+/// @brief Variable management implementation.
+///
+/// Discovers and stores RPG variable declarations (dcl-s, dcl-ds, dcl-c)
+/// from pseudo code, extracts variable types and array sizes, manages
+/// procedure scope tracking, and provides lookup and cursor-based
+/// retrieval of variable metadata from the REPLVARS table.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked) noMain;
 

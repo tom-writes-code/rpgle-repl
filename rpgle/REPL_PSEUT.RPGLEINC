@@ -5,31 +5,55 @@
 /EndIf
 /Define REPL_PSEUT
 
+/// @file REPL_PSEUT
+/// @brief Shared type definitions used across all REPL modules.
+/// @author Tom Sharp
+
+/// Describes where pseudo code source should be read from.
 dcl-ds t_sourceLocation qualified template;
+  /// *on if the user explicitly directed us to this source location.
   isUserDirected ind inz(*off);
+  /// Library containing the source file. Default: *LIBL.
   library char(10) inz('*LIBL');
+  /// Source physical file name. Default: REPLSRC.
   file char(10) inz('REPLSRC');
+  /// Source member name. Default: REPLSRC.
   member char(10) inz('REPLSRC');
+  /// Named snippet to load (blank if using session code).
   snippetName char(20);
 end-ds;
 
+/// A single line of pseudo code with its sequence number.
 dcl-ds t_lineOfCode qualified template;
+  /// Line sequence number within the snippet.
   line packed(6:0);
+  /// The code text (max 71 characters, matching source physical file record length).
   code char(71);
 end-ds;
 
-dcl-ds t_result qualified template;
+/// A single execution result for display.
+dcl-ds t_replResult qualified template;
+  /// Classification of the result (e.g. EVALUATION, TEST-SUCCESS, TEST-FAILURE).
   resultType char(32);
+  /// The result text to display (up to 1000 characters).
   resultText varchar(1000);
+  /// The pseudo code line number this result belongs to.
   lineNumber zoned(6);
 end-ds;
 
+/// Template for long code strings (up to 1000 characters).
 dcl-s t_longLineOfCode varchar(1000) template;
 
+/// A saved or unsaved snippet for the load/browse screen.
 dcl-ds t_storedSnippet qualified template;
+  /// User profile that owns the snippet.
   owner char(10);
+  /// Session ID (job name) for unsaved snippets.
   sessionId char(28);
+  /// Save name for named snippets (blank if unsaved).
   saveName char(20);
+  /// Timestamp of last modification.
   lastUpdate timestamp;
+  /// First 100 characters of the snippet code for preview.
   preview char(100);
 end-ds;

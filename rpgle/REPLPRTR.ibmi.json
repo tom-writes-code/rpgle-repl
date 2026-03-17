@@ -1,0 +1,8 @@
+{
+  "build": {
+    "objtype": "*PGM",
+    "module": ["REPLPRTR"],
+    "bndSrvPgm": ["REPL_PSEU"],
+    "text": "repl-rpg Result Printer"
+  }
+}

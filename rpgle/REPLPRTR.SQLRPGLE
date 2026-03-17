@@ -1,6 +1,16 @@
 
 **FREE
 
+/// @file REPLPRTR
+/// @brief Result printer for batch output.
+///
+/// Prints test results to stdout/stderr at configurable verbosity levels:
+/// 0 = quiet, 1 = summary only, 2 = individual test results,
+/// 3 = full compiler output. Reports pass/fail counts and clears
+/// results after printing.
+///
+/// @author Tom Sharp
+
 ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
         fixnbr(*zoned : *inputpacked);
 

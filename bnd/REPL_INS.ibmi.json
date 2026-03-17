@@ -1,0 +1,8 @@
+{
+  "build": {
+    "objtype": "*SRVPGM",
+    "module": ["REPL_INS"],
+    "bndSrvPgm": [],
+    "text": "repl-rpg Add Line to Generated Source"
+  }
+}

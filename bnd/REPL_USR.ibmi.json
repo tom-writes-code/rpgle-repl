@@ -1,0 +1,8 @@
+{
+  "build": {
+    "objtype": "*SRVPGM",
+    "module": ["REPL_USR"],
+    "bndSrvPgm": ["REPL_PM"],
+    "text": "repl-rpg Perform User Actions"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "build": {
+    "objtype": "*SRVPGM",
+    "module": ["REPL_PSEU"],
+    "bndSrvPgm": ["REPL_USR", "REPL_INS"],
+    "text": "repl-rpg Edit Pseudo Code"
+  }
+}

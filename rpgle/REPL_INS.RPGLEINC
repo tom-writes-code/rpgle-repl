@@ -7,36 +7,41 @@
 
 /include repl_pseut
 
-// Add a single line of generated code to the source file
-//   denoted by the REPL_ALIAS alias. This alias is set up
-//   using createSqlAlias.
-// Free or fixed format code can be passed in, and the number
-//   of leading blanks will be adjusted accordingly.
-// This is kept in a separate service program to avoid
-//   circular dependencies. This should not bind in
-//   any other service programs.
+/// @file REPL_INS
+/// @brief Source line insertion - writes individual lines into the generated source member.
+/// @author Tom Sharp
+///
+/// Kept in its own service program with no REPL dependencies to avoid circular bindings.
+
+/// Insert a single line of code into the generated source member via REPL_ALIAS.
+///
+/// Both free-format and fixed-format code are accepted; leading blanks are
+/// adjusted automatically based on the format detected. The SQL alias must
+/// have been created beforehand with createSqlAlias().
+///
+/// @param code The line of code to insert (up to 71 characters).
+/// @param line Optional sequence number for the inserted line.
 dcl-pr insertSingleLineOfGeneratedCode;
   code like(t_lineOfCode.code) const;
   line like(t_lineOfCode.line) options(*nopass) const;
 end-pr;
 
-// Given a single line of code, determine if it is fixed format.
-// Code is considered fixed format if the first character
-//   is any of the following:
-//     o F
-//     o I
-//     o O
-//     o D
-//     o C
+/// Determine whether a line of code is fixed-format RPG.
+///
+/// A line is considered fixed-format if its first non-blank character
+/// is one of: F, I, O, D, C, H, or P.
+///
+/// @param code The line of code to check.
+/// @return *on if the code is fixed-format.
 dcl-pr codeIsFixedFormat ind;
   code like(t_lineOfCode.code) const;
 end-pr;
 
-// Create an alias REPL_ALIAS for the c_generatedSourceMember
-//   of c_generatedSourceFile in c_generatedSourceLibrary.
-// This will be used in insertSingleLineOfGeneratedCode.
+/// Create the SQL alias REPL_ALIAS pointing to the generated source member.
+///
+/// Maps to: c_generatedSourceLibrary/c_generatedSourceFile(c_generatedSourceMember).
 dcl-pr createSqlAlias;
 end-pr;
 
-// Drop the alias REPL_ALIAS.
+/// Drop the REPL_ALIAS SQL alias.
 dcl-pr dropSqlAlias end-pr;
