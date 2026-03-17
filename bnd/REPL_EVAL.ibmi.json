@@ -1,8 +1,0 @@
-{
-  "build": {
-    "objtype": "*SRVPGM",
-    "module": ["REPL_EVAL"],
-    "bndSrvPgm": ["REPL_VARS", "REPL_INS"],
-    "text": "repl-rpg Evaluate Lines of Code"
-  }
-}

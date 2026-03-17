@@ -1,8 +1,0 @@
-{
-  "build": {
-    "objtype": "*PGM",
-    "module": ["REPLLOAD"],
-    "bndSrvPgm": ["REPL_PSEU"],
-    "text": "repl-rpg Snippet Loader"
-  }
-}

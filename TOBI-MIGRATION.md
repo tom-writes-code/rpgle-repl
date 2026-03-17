@@ -1,92 +1,58 @@
-# Migrating from IBM BOB to IBM TOBI
+# Building rpgle-repl with TOBI (makei)
 
-This document covers the migration of rpgle-repl from **IBM BOB** (Better Object Builder)
-to **IBM TOBI** and the IBM i system changes you'll need to make.
+This document covers how to build rpgle-repl from source using
+[TOBI](https://github.com/IBM/ibmi-tobi/) (The Object Builder for IBM i).
 
-## What Changed In This Repo
+There are two build flows:
 
-### Build Compatibility
-- **`Rules.mk` files are required** for the currently installed TOBI/makei toolchain (`tobi` package 3.2.1).
-  - The package provides the `makei` CLI and still expects Rules.mk-driven dependency metadata.
-  - If Rules.mk files are removed, `makei build` fails with missing `.Rules.mk.build`.
+1. **User build** — compile from source into a library: `makei build`
+2. **Developer release** — compile + produce a distributable save file: `./package.sh`
 
-### Added
-- **`.ibmi.json` sidecar files** for each *SRVPGM and *PGM
-  - `bnd/*.ibmi.json` — one per service program, specifying modules and bound service programs.
-  - `rpgle/*.ibmi.json` — one per program, specifying modules, bound service programs, and activation group.
-  - These do not replace Rules.mk in the currently installed makei version on IBM i.
+## Prerequisites
 
-### Updated
-- **`iproj.json`** — `curlib` and `objlib` changed from `REPLBOB` to `RPGLEREPL`.
-- **`install.sh`** — `SAVLIB(REPLBOB)` changed to `SAVLIB(RPGLEREPL)` in the RSTOBJ command.
-
-## What You Need To Do On The IBM i
-
-### Step 1: Install TOBI
-
-First, search for the available TOBI package name in your configured repos:
+### Install TOBI
 
 ```bash
-yum search tobi
+yum install tobi
+makei --version
 ```
 
-Install whichever package name is returned (e.g. `ibm-tobi`, `tobi`, `ibm-i-tobi`):
+> The `tobi` RPM package provides the `makei` CLI — there is no `tobi` command.
 
-```bash
-yum install <package-name>
-```
-
-If `yum search tobi` returns nothing, TOBI may not yet be in your configured repos. In that
-case check the IBM open-source Bootstrap to ensure all IBM repos are registered, then retry:
+If `yum install tobi` says "No package tobi available", ensure IBM repos are registered:
 
 ```bash
 /QOpenSys/pkgs/bin/bootstrap.sh
 yum search tobi
+yum install <package-name>
 ```
 
-If you previously had BOB installed, you can remove it (or leave it — they don't conflict):
+### Create the target library
 
-```bash
-yum remove ibm-bob
-```
-
-Verify TOBI is installed:
-
-```bash
-makei --version
-```
-
-### Step 2: Create / Rename the Target Library
-
-The build library changed from `REPLBOB` to `RPGLEREPL`. You have two options:
-
-**Option A — Create a fresh library (recommended):**
 ```
 CRTLIB LIB(RPGLEREPL) TEXT('REPL tool for ILE RPG')
 ```
 
-**Option B — Rename the existing library:**
+Or, if renaming the old BOB library:
+
 ```
 RNMOBJ OBJ(REPLBOB) OBJTYPE(*LIB) NEWOBJ(RPGLEREPL)
 ```
 
-### Step 3: Build With TOBI
+## Flow 1: User Build (compile from source)
 
-From the IFS project directory (wherever you cloned the repo), run:
+From the IFS project directory:
 
 ```bash
+cd /path/to/rpgle-repl
 makei build
 ```
 
-TOBI reads `iproj.json` for the target library, auto-discovers your source files by extension,
-and reads the `.ibmi.json` sidecar files for build parameters (bound service programs, activation
-group, etc.).
+`makei` reads `iproj.json` for the target library, walks the `Rules.mk` files in each
+subdirectory for dependency and compile-override information, and builds everything in
+the correct order.
 
-`makei` uses Rules.mk for dependency resolution and build order.
-
-### Step 4: Verify the Build
-
-Check that all objects were created:
+### Verify
 
 ```
 WRKOBJ OBJ(RPGLEREPL/*ALL)
@@ -99,50 +65,69 @@ You should see:
 - 3 SQL tables: `REPLRSLT`, `REPLSRC`, `REPLVARS`
 - 2 display files: `REPLFM`, `REPLLOADFM`
 
-### Step 5: Update Any CI/CD Scripts
+## Flow 2: Developer Release (compile + save file)
 
-If you had any automation calling `makei` or referencing `REPLBOB`, update them:
+```bash
+cd /path/to/rpgle-repl
+chmod +x package.sh
+./package.sh
+```
 
-| Before (BOB)            | After (TOBI)              |
-|-------------------------|---------------------------|
-| `makei build`           | `makei build`             |
-| `REPLBOB` library       | `RPGLEREPL` library       |
-| `Rules.mk` dependencies | `.ibmi.json` sidecar      |
+This runs `makei build`, then creates a distributable save file `RPGLEREPL/RPGLEREPL`
+with public authority granted, ownership set to QPGMR, and all objects saved
+(excluding modules, save files, and EVFEVENT event files).
 
-## How TOBI Discovers Objects
+To target a different library:
 
-TOBI uses file extensions to determine object types:
+```bash
+./package.sh MYLIB
+```
 
-| Extension     | Object Type          |
-|---------------|----------------------|
-| `.RPGLE`      | *MODULE (RPGLE)      |
-| `.SQLRPGLE`   | *MODULE (SQLRPGLE)   |
-| `.BND`        | *SRVPGM (exports)    |
-| `.CMDSRC`     | *CMD                 |
-| `.TABLE`      | SQL table (via RUNSQLSTM) |
-| `.DSPF`       | *FILE (display file) |
+## What Changed From BOB
 
-When a `.ibmi.json` file sits next to a source file with the same base name, TOBI reads it
-for additional build parameters (object type overrides, modules, bound service programs,
-activation group, text description, etc.).
+| Before (BOB)                        | After (TOBI)                                   |
+|-------------------------------------|-------------------------------------------------|
+| `REPLBOB` library                   | `RPGLEREPL` library                             |
+| `$(d)/` prefix on source in Rules.mk| No prefix needed (TOBI 2.4+)                   |
+| Object type lists (`SRVPGMs :=`)    | Auto-discovered (TOBI 2.4+)                    |
+| `package` make target in root Rules.mk | Separate `package.sh` script                |
+| TEXT as comments (`# ...TEXT=...`)   | `private TEXT :=` compile override in Rules.mk  |
+
+## How TOBI Works
+
+TOBI uses GNU Make under the covers. Each directory has a `Rules.mk` that declares:
+
+- **Dependency lines**: what each object is built from and what it depends on
+- **Compile overrides**: `private TEXT :=`, `private ACTGRP :=`, etc.
+- **Custom recipes**: for non-standard build steps (e.g. QRPGLEREF source PF)
+
+Object types are inferred from file extensions:
+
+| Extension     | Object Type               |
+|---------------|---------------------------|
+| `.RPGLE`      | \*MODULE (RPGLE)          |
+| `.SQLRPGLE`   | \*MODULE (SQLRPGLE)       |
+| `.BND`        | \*SRVPGM (binder source)  |
+| `.CMDSRC`     | \*CMD                     |
+| `.TABLE`      | SQL table (RUNSQLSTM)     |
+| `.DSPF`       | \*FILE (display file)     |
+
+`.ibmi.json` files (optional, per-directory) can override `objlib` and `tgtCcsid` only.
+All other build metadata (dependencies, TEXT, ACTGRP, etc.) goes in `Rules.mk`.
+
+Docs: https://ibm.github.io/ibmi-tobi/
 
 ## Troubleshooting
 
-**"TOBI can't find my source"**
-- Make sure your file extensions match TOBI's expectations (see table above).
-- Check that `iproj.json` exists in the project root.
+**`tobi: command not found`**
+- The CLI is `makei`, not `tobi`. Run `which makei` and `makei --version`.
 
-**"tobi: command not found"**
-- Use `makei build` instead. On IBM i, the `tobi` package provides the `makei` CLI.
-- Confirm with: `which makei` and `makei --version`.
+**`Warning: Target 'PACKAGE' is not supported`**
+- Custom make targets like `package` are not supported by `makei build`.
+  Packaging is now handled by `./package.sh` instead.
 
-**"Objects are building into the wrong library"**
+**`No rule to make target '.Rules.mk.build'`**
+- A `Rules.mk` file is missing. Every source directory needs one.
+
+**Objects building into wrong library**
 - Check `objlib` in `iproj.json` — it should be `RPGLEREPL`.
-
-**"Service program binding fails"**
-- Build order matters. TOBI resolves this automatically, but if you see binding errors,
-  check the `.ibmi.json` files in `bnd/` to make sure the `bndSrvPgm` arrays are correct.
-
-**"I still have the old REPLBOB library"**
-- You can delete it: `DLTLIB LIB(REPLBOB)`
-- Or keep it around as a backup until you're satisfied TOBI builds work.

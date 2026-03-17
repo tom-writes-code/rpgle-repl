@@ -1,8 +1,0 @@
-{
-  "build": {
-    "objtype": "*SRVPGM",
-    "module": ["REPL_HLPR"],
-    "bndSrvPgm": [],
-    "text": "Helpers for REPL Generated Programs"
-  }
-}

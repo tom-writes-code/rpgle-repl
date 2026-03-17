@@ -1,8 +1,0 @@
-{
-  "build": {
-    "objtype": "*SRVPGM",
-    "module": ["REPL_GEN"],
-    "bndSrvPgm": ["REPL_USR", "REPL_VARS", "REPL_EVAL", "REPL_PSEU", "REPL_INS"],
-    "text": "repl-rpg Generate Source Code"
-  }
-}

@@ -1,8 +1,0 @@
-{
-  "build": {
-    "objtype": "*SRVPGM",
-    "module": ["REPL_VARS"],
-    "bndSrvPgm": [],
-    "text": "repl-rpg Interrogate Variables"
-  }
-}

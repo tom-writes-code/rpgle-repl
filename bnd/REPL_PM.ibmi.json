@@ -1,8 +1,0 @@
-{
-  "build": {
-    "objtype": "*SRVPGM",
-    "module": ["REPL_PM"],
-    "bndSrvPgm": [],
-    "text": "repl-rpg Program Message Handling"
-  }
-}
