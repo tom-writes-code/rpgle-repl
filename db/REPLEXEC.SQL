@@ -1,23 +1,22 @@
 -- @version v3.1.0
--- REPL_EXECUTE: SQL stored procedure registration
+-- repl_execute: SQL stored procedure registration
 --
 -- Run this AFTER building REPLEXEC with makei.
--- Replace RPGLEREPL with your library name if different.
 
-CREATE OR REPLACE PROCEDURE RPGLEREPL.REPL_EXECUTE (
+CREATE OR REPLACE PROCEDURE repl_execute (
   IN P_SOURCE CLOB(64K),
   IN P_SESSION_ID VARCHAR(28)
 )
 DYNAMIC RESULT SETS 1
-EXTERNAL NAME 'RPGLEREPL/REPLEXEC'
+EXTERNAL NAME 'REPLEXEC'
 LANGUAGE RPGLE
 PARAMETER STYLE GENERAL;
 
-COMMENT ON PROCEDURE RPGLEREPL.REPL_EXECUTE IS
+COMMENT ON PROCEDURE repl_execute IS
   'Run RPG source through RPGLE-REPL and return results';
 
 -- Usage from vscode-db2i notebooks:
---   CALL RPGLEREPL.REPL_EXECUTE(
+--   CALL repl_execute(
 --     'dcl-s greeting char(20);
 --      greeting = ''Hello from RPG!'';
 --      replPrint(greeting);',

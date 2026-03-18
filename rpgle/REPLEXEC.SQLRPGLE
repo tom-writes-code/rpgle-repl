@@ -9,7 +9,7 @@
 /// Designed for use from vscode-db2i notebooks or any SQL caller.
 ///
 /// Usage:
-///   CALL RPGLEREPL.REPL_EXECUTE('dcl-s x char(10); ...', 'NB-session-123')
+///   CALL REPL_EXECUTE('dcl-s x char(10); ...', 'NB-session-123')
 ///
 /// @author Tom Sharp
 
