@@ -1,5 +1,6 @@
 **FREE
 
+/// @version v3.1.0
 /// @file REPL_VARS
 /// @brief Variable management implementation.
 ///

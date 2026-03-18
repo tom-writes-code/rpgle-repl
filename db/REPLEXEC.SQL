@@ -1,3 +1,4 @@
+-- @version v3.1.0
 -- REPL_EXECUTE: SQL stored procedure registration
 --
 -- Run this AFTER building REPLEXEC with makei.

@@ -1,3 +1,4 @@
+-- @version v3.1.0
 CREATE OR REPLACE TABLE replsrc
 (
   --Primary Key
