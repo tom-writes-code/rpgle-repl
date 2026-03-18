@@ -27,15 +27,17 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 
 //------------------------------------------------------------------------------
 
-dcl-ds t_clob qualified template;
-  clob_len uns(10);
-  clob_data char(65536) ccsid(*jobrunmix);
-end-ds;
-
 dcl-pi *n;
-  p_source likeds(t_clob);
+  p_sourceRaw char(65540) ccsid(*hex);
   p_sessionId varchar(28) const;
 end-pi;
+
+dcl-ds p_source qualified based(pSourcePtr);
+  len uns(10);
+  data char(65536) ccsid(*jobrunmix);
+end-ds;
+
+dcl-s pSourcePtr pointer;
 
 dcl-ds sourceLocation likeds(t_sourceLocation);
 dcl-s snippetName char(20);
@@ -49,6 +51,8 @@ dcl-s hasError ind inz(*off);
 dcl-c LF x'25';
 
 //------------------------------------------------------------------------------
+
+pSourcePtr = %addr(p_sourceRaw);
 
 // Generate snippet name from session ID (first 20 chars)
 
@@ -66,22 +70,22 @@ clearSessionPseudoVariables();
 
 lineNum = 1;
 lineStart = 1;
-sourceLen = p_source.clob_len;
+sourceLen = p_source.len;
 
 if sourceLen > 0;
 
   dow lineStart <= sourceLen;
 
-    lineEnd = %scan(LF: p_source.clob_data: lineStart);
+    lineEnd = %scan(LF: p_source.data: lineStart);
 
     if lineEnd = 0 or lineEnd > sourceLen;
       // Last line (no trailing newline)
-      currentLine = %subst(p_source.clob_data: lineStart:
+      currentLine = %subst(p_source.data: lineStart:
                            sourceLen - lineStart + 1);
       lineStart = sourceLen + 1;
     else;
       if lineEnd > lineStart;
-        currentLine = %subst(p_source.clob_data: lineStart:
+        currentLine = %subst(p_source.data: lineStart:
                              lineEnd - lineStart);
       else;
         currentLine = '';
