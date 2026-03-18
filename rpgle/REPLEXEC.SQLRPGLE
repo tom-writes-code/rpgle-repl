@@ -26,8 +26,13 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 
 //------------------------------------------------------------------------------
 
+dcl-ds t_clob qualified template;
+  len uns(10);
+  data char(65536) ccsid(*jobrunmix);
+end-ds;
+
 dcl-pi *n;
-  p_source sqltype(CLOB: 65536);
+  p_source likeds(t_clob);
   p_sessionId varchar(28) const;
 end-pi;
 
@@ -60,22 +65,22 @@ clearSessionPseudoVariables();
 
 lineNum = 1;
 lineStart = 1;
-sourceLen = p_source_LEN;
+sourceLen = p_source.len;
 
 if sourceLen > 0;
 
   dow lineStart <= sourceLen;
 
-    lineEnd = %scan(LF: p_source_DATA: lineStart);
+    lineEnd = %scan(LF: p_source.data: lineStart);
 
     if lineEnd = 0 or lineEnd > sourceLen;
       // Last line (no trailing newline)
-      currentLine = %subst(p_source_DATA: lineStart:
+      currentLine = %subst(p_source.data: lineStart:
                            sourceLen - lineStart + 1);
       lineStart = sourceLen + 1;
     else;
       if lineEnd > lineStart;
-        currentLine = %subst(p_source_DATA: lineStart:
+        currentLine = %subst(p_source.data: lineStart:
                              lineEnd - lineStart);
       else;
         currentLine = '';
