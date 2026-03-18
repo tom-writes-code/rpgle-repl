@@ -4,7 +4,7 @@
 /// @file REPLEXEC
 /// @brief SQL stored procedure for notebook integration.
 ///
-/// Accepts RPG source as a CLOB, runs it through the REPL pipeline
+/// Accepts RPG source as a VARCHAR, runs it through the REPL pipeline
 /// (generate, compile, run), and returns results as a SQL result set.
 /// Designed for use from vscode-db2i notebooks or any SQL caller.
 ///
@@ -28,16 +28,9 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 //------------------------------------------------------------------------------
 
 dcl-pi *n;
-  p_sourceRaw char(65540) ccsid(*hex);
+  p_source varchar(32740) ccsid(*jobrunmix);
   p_sessionId varchar(28) const;
 end-pi;
-
-dcl-ds p_source qualified based(pSourcePtr);
-  len uns(10);
-  data char(65536) ccsid(*jobrunmix);
-end-ds;
-
-dcl-s pSourcePtr pointer;
 
 dcl-ds sourceLocation likeds(t_sourceLocation);
 dcl-s snippetName char(20);
@@ -52,8 +45,6 @@ dcl-c LF x'25';
 
 //------------------------------------------------------------------------------
 
-pSourcePtr = %addr(p_sourceRaw);
-
 // Generate snippet name from session ID (first 20 chars)
 
 snippetName = p_sessionId;
@@ -66,26 +57,26 @@ exec sql
 clearSessionPseudoResults();
 clearSessionPseudoVariables();
 
-// --- Parse source CLOB into lines and insert into REPLSRC ---
+// --- Parse source into lines and insert into REPLSRC ---
 
 lineNum = 1;
 lineStart = 1;
-sourceLen = p_source.len;
+sourceLen = %len(p_source);
 
 if sourceLen > 0;
 
   dow lineStart <= sourceLen;
 
-    lineEnd = %scan(LF: p_source.data: lineStart);
+    lineEnd = %scan(LF: p_source: lineStart);
 
     if lineEnd = 0 or lineEnd > sourceLen;
       // Last line (no trailing newline)
-      currentLine = %subst(p_source.data: lineStart:
+      currentLine = %subst(p_source: lineStart:
                            sourceLen - lineStart + 1);
       lineStart = sourceLen + 1;
     else;
       if lineEnd > lineStart;
-        currentLine = %subst(p_source.data: lineStart:
+        currentLine = %subst(p_source: lineStart:
                              lineEnd - lineStart);
       else;
         currentLine = '';
