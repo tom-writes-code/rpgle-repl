@@ -28,8 +28,8 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 //------------------------------------------------------------------------------
 
 dcl-ds t_clob qualified template;
-  len uns(10);
-  data char(65536) ccsid(*jobrunmix);
+  clob_len uns(10);
+  clob_data char(65536) ccsid(*jobrunmix);
 end-ds;
 
 dcl-pi *n;
@@ -66,22 +66,22 @@ clearSessionPseudoVariables();
 
 lineNum = 1;
 lineStart = 1;
-sourceLen = p_source.len;
+sourceLen = p_source.clob_len;
 
 if sourceLen > 0;
 
   dow lineStart <= sourceLen;
 
-    lineEnd = %scan(LF: p_source.data: lineStart);
+    lineEnd = %scan(LF: p_source.clob_data: lineStart);
 
     if lineEnd = 0 or lineEnd > sourceLen;
       // Last line (no trailing newline)
-      currentLine = %subst(p_source.data: lineStart:
+      currentLine = %subst(p_source.clob_data: lineStart:
                            sourceLen - lineStart + 1);
       lineStart = sourceLen + 1;
     else;
       if lineEnd > lineStart;
-        currentLine = %subst(p_source.data: lineStart:
+        currentLine = %subst(p_source.clob_data: lineStart:
                              lineEnd - lineStart);
       else;
         currentLine = '';
