@@ -1,25 +1,9 @@
 -- @version v3.1.0
 -- repl_execute: SQL stored procedure for notebook integration
 --
--- Run this AFTER building REPLEXEC with makei.
+-- This is self-contained. No external procedure registration needed.
+-- The RPG program REPLEXEC is called via QCMDEXC.
 
--- Step 1: Register the RPG pipeline runner as a helper procedure.
---         This accepts a snippet name + session ID and runs
---         generate / compile / run. No source text parameter.
-CREATE OR REPLACE PROCEDURE repl_run_pipeline (
-  IN P_SNIPPET_NAME CHAR(20),
-  IN P_SESSION_ID VARCHAR(28)
-)
-EXTERNAL NAME 'REPLEXEC'
-LANGUAGE RPGLE
-PARAMETER STYLE GENERAL;
-
-COMMENT ON PROCEDURE repl_run_pipeline IS
-  'Internal: run the REPL generate/compile/run pipeline for a snippet';
-
--- Step 2: The public-facing SQL procedure.
---         Parses source text into REPLSRC lines, calls the RPG pipeline,
---         and returns the result set. No LOB parameter passing to RPG.
 CREATE OR REPLACE PROCEDURE repl_execute (
   IN P_SOURCE CLOB(256K),
   IN P_SESSION_ID VARCHAR(28)
@@ -34,6 +18,7 @@ BEGIN
   DECLARE v_nextPos INT;
   DECLARE v_line VARCHAR(200);
   DECLARE v_sourceLen INT;
+  DECLARE v_cmd VARCHAR(200);
   DECLARE c_LF CHAR(1) DEFAULT x'25';
 
   SET v_snippetName = LEFT(P_SESSION_ID, 20);
@@ -49,11 +34,13 @@ BEGIN
 
       IF v_nextPos = 0 THEN
         -- Last line (no trailing newline)
-        SET v_line = CAST(SUBSTRING(P_SOURCE, v_pos, v_sourceLen - v_pos + 1) AS VARCHAR(200));
+        SET v_line = CAST(SUBSTRING(P_SOURCE, v_pos,
+                     v_sourceLen - v_pos + 1) AS VARCHAR(200));
         SET v_pos = v_sourceLen + 1;
       ELSE
         IF v_nextPos > v_pos THEN
-          SET v_line = CAST(SUBSTRING(P_SOURCE, v_pos, v_nextPos - v_pos) AS VARCHAR(200));
+          SET v_line = CAST(SUBSTRING(P_SOURCE, v_pos,
+                       v_nextPos - v_pos) AS VARCHAR(200));
         ELSE
           SET v_line = '';
         END IF;
@@ -76,8 +63,15 @@ BEGIN
     END WHILE;
   END IF;
 
-  -- Run the RPG pipeline (generate, compile, run)
-  CALL repl_run_pipeline(v_snippetName, P_SESSION_ID);
+  -- Call RPG pipeline runner via QCMDEXC (no procedure registration needed)
+  SET v_cmd = 'CALL PGM(REPLEXEC) PARM('''
+    || REPLACE(v_snippetName, '''', '''''') || ''')';
+  CALL QSYS2.QCMDEXC(v_cmd);
+
+  -- Tag results with external session ID
+  UPDATE replrslt SET external_session_id = P_SESSION_ID
+  WHERE session_id = (QSYS2.JOB_NAME)
+    AND (external_session_id IS NULL OR external_session_id = '');
 
   -- Return results
   BEGIN

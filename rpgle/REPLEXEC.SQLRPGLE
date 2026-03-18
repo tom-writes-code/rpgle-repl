@@ -6,7 +6,8 @@
 ///
 /// Called by the SQL procedure REPL_EXECUTE after it has already
 /// parsed and inserted source lines into REPLSRC. This program
-/// runs the generate/compile/run pipeline and tags results.
+/// runs the generate/compile/run pipeline only.
+/// Result tagging and cursor management are handled by the SQL caller.
 ///
 /// @author Tom Sharp
 
@@ -26,7 +27,6 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 
 dcl-pi *n;
   p_snippetName char(20);
-  p_sessionId varchar(28) const;
 end-pi;
 
 dcl-ds sourceLocation likeds(t_sourceLocation);
@@ -69,13 +69,6 @@ if not hasError;
     hasError = *on;
   endmon;
 endif;
-
-// --- Tag all results with external session ID ---
-
-exec sql
-  UPDATE replrslt SET external_session_id = :p_sessionId
-  WHERE session_id = (QSYS2.JOB_NAME)
-    AND (external_session_id IS NULL OR external_session_id = '');
 
 clearSessionPseudoVariables();
 
