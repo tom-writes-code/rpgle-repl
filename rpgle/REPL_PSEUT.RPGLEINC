@@ -27,8 +27,8 @@ end-ds;
 dcl-ds t_lineOfCode qualified template;
   /// Line sequence number within the snippet.
   line packed(6:0);
-  /// The code text (max 71 characters, matching source physical file record length).
-  code char(71);
+  /// The code text (max 200 characters).
+  code char(200);
 end-ds;
 
 /// A single execution result for display.
