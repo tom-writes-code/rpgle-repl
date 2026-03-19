@@ -38,13 +38,11 @@ BEGIN
 
       IF v_nextPos = 0 THEN
         -- Last line (no trailing newline)
-        SET v_line = CAST(SUBSTRING(v_source, v_pos,
-                     v_sourceLen - v_pos + 1) AS VARCHAR(200));
+        SET v_line = CAST(SUBSTRING(v_source, v_pos, v_sourceLen - v_pos + 1) AS VARCHAR(200));
         SET v_pos = v_sourceLen + 1;
       ELSE
         IF v_nextPos > v_pos THEN
-          SET v_line = CAST(SUBSTRING(v_source, v_pos,
-                       v_nextPos - v_pos) AS VARCHAR(200));
+          SET v_line = CAST(SUBSTRING(v_source, v_pos, v_nextPos - v_pos) AS VARCHAR(200));
         ELSE
           SET v_line = '';
         END IF;
@@ -53,7 +51,7 @@ BEGIN
 
       -- Strip trailing CR if present (handles CRLF)
       IF LENGTH(v_line) > 0
-        AND SUBSTRING(v_line, LENGTH(v_line), 1) = x'0D' THEN
+      AND SUBSTRING(v_line, LENGTH(v_line), 1) = x'0D' THEN
         SET v_line = LEFT(v_line, LENGTH(v_line) - 1);
       END IF;
 
@@ -68,8 +66,7 @@ BEGIN
   END IF;
 
   -- Call RPG pipeline runner via QCMDEXC (no procedure registration needed)
-  SET v_cmd = 'CALL PGM(REPLEXEC) PARM('''
-    || REPLACE(v_snippetName, '''', '''''') || ''')';
+  SET v_cmd = 'CALL PGM(REPLEXEC) PARM(''' || REPLACE(v_snippetName, '''', '''''') || ''')';
   CALL QSYS2.QCMDEXC(v_cmd);
 
   -- Tag results with external session ID
@@ -80,8 +77,7 @@ BEGIN
   -- Return results
   BEGIN
     DECLARE c_results CURSOR WITH RETURN FOR
-      SELECT line_number, result_number, result_description,
-             loop_count, result_type
+      SELECT line_number, result_number, result_description, loop_count, result_type
       FROM replrslt
       WHERE external_session_id = P_SESSION_ID
       ORDER BY line_number, result_number;
@@ -95,18 +91,3 @@ END;
 
 COMMENT ON PROCEDURE repl_execute IS
   'Run RPG source through RPGLE-REPL and return results';
-
--- Usage from vscode-db2i notebooks:
---   CALL repl_execute(
---     'dcl-s greeting char(20);
---      greeting = ''Hello from RPG!'';
---      replPrint(greeting);',
---     'NB-session-123'
---   );
---
--- Returns a result set with columns:
---   LINE_NUMBER      DEC(4,0)       - source line number
---   RESULT_NUMBER    DEC(4,0)       - sequential result for this line
---   RESULT_DESCRIPTION VARCHAR(1000) - the result text
---   LOOP_COUNT       DEC(5,0)       - loop iteration count
---   RESULT_TYPE      CHAR(32)       - EVALUATION, TEST-SUCCESS, TEST-FAILURE, etc.
