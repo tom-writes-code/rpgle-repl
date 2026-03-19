@@ -129,6 +129,54 @@ replEquals('two plus two': 4: result);
 // Result: TEST-SUCCESS ✓
 ```
 
+## SQL Stored Procedure: `REPL_EXECUTE`
+
+`REPL_EXECUTE` provides a single-call SQL interface for running RPG snippets
+programmatically — used by the [vscode-db2i](https://github.com/halcyon-tech/vscode-db2i)
+notebook extension, but available for any SQL caller.
+
+**Signature:**
+
+```sql
+CALL {lib}.REPL_EXECUTE(source, session_id)
+```
+
+| Parameter    | Type          | Description                                  |
+| ------------ | ------------- | -------------------------------------------- |
+| `source`     | `CLOB(256K)`  | RPG source code (lines separated by newline) |
+| `session_id` | `VARCHAR(28)` | Unique session identifier to isolate results |
+
+**Returns:** A result set (via `DYNAMIC RESULT SETS 1`) with one row per result:
+
+| Column               | Type            | Description                                        |
+| -------------------- | --------------- | -------------------------------------------------- |
+| `LINE_NUMBER`        | `DEC(4,0)`      | Source line that produced the result               |
+| `RESULT_NUMBER`      | `DEC(4,0)`      | Sequential result ID for the line                  |
+| `RESULT_DESCRIPTION` | `VARCHAR(1000)` | The result text                                    |
+| `LOOP_COUNT`         | `DEC(5,0)`      | Loop iteration count                               |
+| `RESULT_TYPE`        | `CHAR(32)`      | `EVALUATION`, `TEST-SUCCESS`, `TEST-FAILURE`, etc. |
+
+**Example:**
+
+```sql
+CALL RPGLEREPL.REPL_EXECUTE(
+  'dcl-s greeting char(20);
+   greeting = ''Hello from RPG!'';
+   replPrint(greeting);',
+  'my-session-001'
+);
+```
+
+**How it works:** The procedure parses the source into lines, inserts them into
+`REPLSRC` as a named snippet, runs the full REPL pipeline (generate → compile →
+run) via `QCMDEXC`, and returns matching rows from `REPLRSLT`. Source lines are
+cleaned up automatically; result rows persist tagged by session ID.
+
+**Library list:** The caller's SQL job must have the RPGLE-REPL library in its
+library list (the vscode-db2i extension does this automatically via `ADDLIBLE`).
+If calling manually, run `ADDLIBLE {lib}` first or ensure the library is in your
+job's library list.
+
 ## Building from Source
 
 This project uses **IBM TOBI** for builds. See [TOBI-MIGRATION.md](TOBI-MIGRATION.md) for the full

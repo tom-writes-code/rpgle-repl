@@ -1,5 +1,6 @@
 **FREE
 
+/// @version v3.1.0
 /// @file REPLWRPR
 /// @brief External wrapper program for batch/CI execution.
 ///
@@ -62,6 +63,10 @@ monitor;
   createGeneratedSourceObject(sourceLocation);
 on-error;
   writeError('-1: Could not generate module' + newLine);
+  exec sql
+    UPDATE replrslt SET external_session_id = :sessionId
+    WHERE session_id = (QSYS2.JOB_NAME)
+      AND (external_session_id IS NULL OR external_session_id = '');
   *inlr = *on;
   return;
 endmon;
@@ -72,6 +77,10 @@ monitor;
   compileGeneratedSourceObject(*off: *on);
 on-error;
   writeError('-1: Could not generate program object' + newLine);
+  exec sql
+    UPDATE replrslt SET external_session_id = :sessionId
+    WHERE session_id = (QSYS2.JOB_NAME)
+      AND (external_session_id IS NULL OR external_session_id = '');
   *inlr = *on;
   return;
 endmon;
@@ -82,6 +91,10 @@ monitor;
   runGeneratedProgramObject();
 on-error;
   writeError('-1: Could not run snippet' + newLine);
+  exec sql
+    UPDATE replrslt SET external_session_id = :sessionId
+    WHERE session_id = (QSYS2.JOB_NAME)
+      AND (external_session_id IS NULL OR external_session_id = '');
   *inlr = *on;
   return;
 endmon;

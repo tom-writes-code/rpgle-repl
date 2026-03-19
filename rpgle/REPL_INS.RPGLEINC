@@ -1,5 +1,7 @@
 **FREE
 
+/// @version v3.1.0
+
 /If Defined(REPL_INS)
 /Eof
 /Endif
@@ -19,7 +21,7 @@
 /// adjusted automatically based on the format detected. The SQL alias must
 /// have been created beforehand with createSqlAlias().
 ///
-/// @param code The line of code to insert (up to 71 characters).
+/// @param code The line of code to insert (up to 200 characters).
 /// @param line Optional sequence number for the inserted line.
 dcl-pr insertSingleLineOfGeneratedCode;
   code like(t_lineOfCode.code) const;

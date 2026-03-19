@@ -1,5 +1,6 @@
 **FREE
 
+/// @version v3.1.0
 /// @file REPL_GEN
 /// @brief Source generator implementation.
 ///
@@ -56,7 +57,7 @@ dcl-proc refreshGeneratedSourceObject export;
 
   monitor;
 
-    runCommand('CRTSRCPF FILE(&1/&2) RCDLEN(128) MBR(&3) ' +
+    runCommand('CRTSRCPF FILE(&1/&2) RCDLEN(240) MBR(&3) ' +
                'TEXT(&4) MAXMBRS(*NOMAX) SIZE(*NOMAX)':
                 c_generatedSourceLibrary:
                 c_generatedSourceFile:

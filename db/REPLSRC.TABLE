@@ -1,3 +1,4 @@
+-- @version v3.1.0
 CREATE OR REPLACE TABLE replsrc
 (
   --Primary Key
@@ -7,7 +8,7 @@ CREATE OR REPLACE TABLE replsrc
   --Columns
   session_id VARCHAR(28),
   line_number FOR COLUMN lineNumber DEC(6,0) NOT NULL,
-  code VARCHAR(71) NOT NULL,
+  code VARCHAR(200) NOT NULL,
   save_name char(20),
   last_update FOR COLUMN lastupdate TIMESTAMP,
   owner CHAR(10),
