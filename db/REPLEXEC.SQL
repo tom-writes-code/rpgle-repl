@@ -5,7 +5,7 @@
 -- The RPG program REPLEXEC is called via QCMDEXC.
 
 CREATE OR REPLACE PROCEDURE repl_execute (
-  IN P_SOURCE CLOB(256K),
+  IN P_SOURCE CLOB(256K) CCSID 1208,
   IN P_SESSION_ID VARCHAR(28)
 )
 DYNAMIC RESULT SETS 1
@@ -13,17 +13,20 @@ LANGUAGE SQL
 SET OPTION COMMIT = *NONE
 
 BEGIN
-  DECLARE v_snippetName CHAR(20);
+  DECLARE v_snippetName CHAR(20) CCSID 37;
   DECLARE v_lineNum INT DEFAULT 1;
   DECLARE v_pos INT DEFAULT 1;
   DECLARE v_nextPos INT;
-  DECLARE v_line VARCHAR(200);
+  DECLARE v_line VARCHAR(200) CCSID 37;
   DECLARE v_sourceLen INT;
-  DECLARE v_cmd VARCHAR(200);
-  DECLARE c_LF CHAR(1) DEFAULT x'25';
+  DECLARE v_cmd VARCHAR(200) CCSID 37;
+  DECLARE v_source CLOB(256K) CCSID 37;
+  DECLARE c_LF CHAR(1) CCSID 37 DEFAULT x'25';
 
-  SET v_snippetName = LEFT(P_SESSION_ID, 20);
-  SET v_sourceLen = LENGTH(P_SOURCE);
+  -- Convert UTF-8 input to EBCDIC for table operations
+  SET v_source = CAST(P_SOURCE AS CLOB(256K) CCSID 37);
+  SET v_snippetName = LEFT(CAST(P_SESSION_ID AS VARCHAR(28) CCSID 37), 20);
+  SET v_sourceLen = LENGTH(v_source);
 
   -- Clear previous source for this snippet
   DELETE FROM replsrc WHERE save_name = v_snippetName;
@@ -31,16 +34,16 @@ BEGIN
   -- Parse source into lines (split on EBCDIC LF x'25')
   IF v_sourceLen > 0 THEN
     WHILE v_pos <= v_sourceLen DO
-      SET v_nextPos = LOCATE(c_LF, P_SOURCE, v_pos);
+      SET v_nextPos = LOCATE(c_LF, v_source, v_pos);
 
       IF v_nextPos = 0 THEN
         -- Last line (no trailing newline)
-        SET v_line = CAST(SUBSTRING(P_SOURCE, v_pos,
+        SET v_line = CAST(SUBSTRING(v_source, v_pos,
                      v_sourceLen - v_pos + 1) AS VARCHAR(200));
         SET v_pos = v_sourceLen + 1;
       ELSE
         IF v_nextPos > v_pos THEN
-          SET v_line = CAST(SUBSTRING(P_SOURCE, v_pos,
+          SET v_line = CAST(SUBSTRING(v_source, v_pos,
                        v_nextPos - v_pos) AS VARCHAR(200));
         ELSE
           SET v_line = '';
