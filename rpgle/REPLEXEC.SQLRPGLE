@@ -45,8 +45,7 @@ sourceLocation.isUserDirected = *on;
 monitor;
   createGeneratedSourceObject(sourceLocation);
 on-error;
-  replResult_recordCustomMessage(
-    'Could not generate module');
+  replResult_recordCustomMessage('Could not generate module');
   hasError = *on;
 endmon;
 
@@ -54,8 +53,7 @@ if not hasError;
   monitor;
     compileGeneratedSourceObject(*off: *on);
   on-error;
-    replResult_recordCustomMessage(
-      'Could not compile program object');
+    replResult_recordCustomMessage('Could not compile program object');
     hasError = *on;
   endmon;
 endif;
@@ -64,8 +62,7 @@ if not hasError;
   monitor;
     runGeneratedProgramObject();
   on-error;
-    replResult_recordCustomMessage(
-      'Could not run snippet');
+    replResult_recordCustomMessage('Could not run snippet');
     hasError = *on;
   endmon;
 endif;
