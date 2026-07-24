@@ -221,6 +221,9 @@ dcl-proc fetchVariableDefinitionFromCode export;
     code like(t_longLineOfCode) value;
   end-pi;
 
+  dcl-s inzPosition packed(10);
+  dcl-s inzClose packed(10);
+
   // upper case it
   code = toUpperCase(code);
 
@@ -233,6 +236,19 @@ dcl-proc fetchVariableDefinitionFromCode export;
         code:
         %scan(' ': code)
       ));
+
+  // strip INZ(...) blocks
+  dow %scan('INZ(': code) > 0;
+    inzPosition = %scan('INZ(': code);
+    inzClose = %scan(')': %subst(code: inzPosition));
+    if inzClose = 0;
+      leave;
+    endif;
+    code = %trim(
+      %subst(code: 1: inzPosition - 1)
+      + %subst(code: inzPosition + inzClose)
+    );
+  enddo;
 
   // take out all the spaces
   code = %trim(%scanrpl(' ': '': code));
@@ -543,6 +559,8 @@ dcl-proc fetchVariableTypeFromCode export;
   end-pi;
 
   dcl-s definition like(t_longLineOfCode);
+  dcl-s inzPosition packed(10);
+  dcl-s inzClose packed(10);
   dcl-ds likeVariable likeds(t_variable);
 
   // uppercase it
@@ -553,6 +571,20 @@ dcl-proc fetchVariableTypeFromCode export;
 
   // remove the variable name
   code = %trim(%subst(code: %scan(' ': code)));
+
+  // strip INZ(...) blocks so indicator declarations like
+  // "ind inz(*off);" still resolve correctly.
+  dow %scan('INZ(': code) > 0;
+    inzPosition = %scan('INZ(': code);
+    inzClose = %scan(')': %subst(code: inzPosition));
+    if inzClose = 0;
+      leave;
+    endif;
+    code = %trim(
+      %subst(code: 1: inzPosition - 1)
+      + %subst(code: inzPosition + inzClose)
+    );
+  enddo;
 
   select;
     when %scan('CHAR(': %scanrpl(' ': '': code)) > 0
