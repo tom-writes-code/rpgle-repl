@@ -26,6 +26,91 @@ ctl-opt datedit(*ymd) option(*nodebugio : *srcstmt)
 
 //-----------------------------------------------------------------------
 
+dcl-proc shouldUseDedicatedResultPrinter;
+  dcl-pi *n ind;
+    variable likeds(t_variable) const;
+    arrayElement like(t_variable.arraySize) const options(*nopass);
+  end-pi;
+
+  dcl-s arrayElementWk like(t_variable.arraySize) inz(0);
+
+  if variable.name = *blanks or variable.type = *blanks;
+    return *off;
+  endif;
+
+  if %parms() >= %parmnum(arrayElement);
+    arrayElementWk = arrayElement;
+  endif;
+
+  // indicators always use dedicated printer
+  if variable.type = 'indicator' or variable.type = '*indicator';
+    return *on;
+  endif;
+
+  if variable.arraySize > 1 and arrayElementWk = 0;
+    return *on;
+  endif;
+
+  if variable.arraySize <= 1 and variable.type = 'datastruct';
+    return *on;
+  endif;
+
+  return *off;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
+dcl-proc writeResultPrinterProc;
+  dcl-pi *n;
+    triggerType like(t_triggerType) const;
+    variable likeds(t_variable) const;
+    arrayElement like(t_variable.arraySize) const options(*nopass);
+  end-pi;
+
+  dcl-s arrayElementWk like(t_variable.arraySize) inz(0);
+
+  if %parms() >= %parmnum(arrayElement);
+    arrayElementWk = arrayElement;
+  endif;
+
+  if shouldUseDedicatedResultPrinter(variable: arrayElementWk);
+    // special handling for indicators
+    if variable.type = 'indicator' or variable.type = '*indicator';
+      insertSingleLineOfGeneratedCode
+        ('replResult_rpgIndicator(');
+      return;
+    endif;
+
+    insertSingleLineOfGeneratedCode
+      ('repl_...');
+    insertSingleLineOfGeneratedCode
+      (%trim(variable.scope) + '_...');
+    insertSingleLineOfGeneratedCode
+      (%trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
+
+    if variable.arraySize > 1 and arrayElementWk = 0;
+      insertSingleLineOfGeneratedCode
+        ('multiple(');
+    else;
+      insertSingleLineOfGeneratedCode
+        ('single(');
+    endif;
+    return;
+  endif;
+
+  if triggerType = c_replEqualsStatement;
+    insertSingleLineOfGeneratedCode
+      ('replResult_replEquals(');
+  else;
+    insertSingleLineOfGeneratedCode
+      ('replResult_replPrint(');
+  endif;
+
+end-proc;
+
+//-----------------------------------------------------------------------
+
 dcl-proc evaluateLineOfPseudoCode export;
   dcl-pi *n;
     line like(t_lineOfCode.line) const;
@@ -39,6 +124,7 @@ dcl-proc evaluateLineOfPseudoCode export;
   dcl-s elementVariableName like(t_variable.name);
   dcl-s unarrayedName like(t_variable.name);
   dcl-s arrayElement like(t_variable.arraySize) inz(0);
+  dcl-s useDedicatedResultPrinter ind inz(*off);
 
   unarrayedName = variableName;
 
@@ -93,195 +179,49 @@ dcl-proc evaluateLineOfPseudoCode export;
     c_replPrintStatement: 
     c_replEqualsStatement
   );
+    useDedicatedResultPrinter
+      = shouldUseDedicatedResultPrinter(variable: arrayElement);
 
-    select;
+    writeResultPrinterProc(triggerType: variable: arrayElement);
 
-      when variable.type = 'indicator' 
-      and (variable.name <> *blanks and variable.type <> *blanks);
-        if triggerType in %list (c_setValueStatement: c_replPrintStatement);
-          insertSingleLineOfGeneratedCode
-            ('replResult_replPrint(');
-        endif;
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('replResult_replEquals(');
-        endif;  
+    insertSingleLineOfGeneratedCode
+      ('  ' + %char(line) + ':');
 
-        insertSingleLineOfGeneratedCode
-          ('  ' + %char(line) + ':');
+    insertSingleLineOfGeneratedCode
+      ('  ''' + %scanrpl('''': '': %trim(variableName)) + ''':');
 
-        insertSingleLineOfGeneratedCode
-          ('  ''' + %scanrpl('''': '': %trim(variableName)) + ''':');
+    if triggerType = c_replEqualsStatement
+    and not useDedicatedResultPrinter;
+      insertSingleLineOfGeneratedCode
+        ('  ' + expectedValue + ':');
+    endif;
 
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('  ' + expectedValue + ':');
-        endif;  
+    insertSingleLineOfGeneratedCode
+      ('  ' + %trim(variableName));
 
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName));
-
-        insertSingleLineOfGeneratedCode
-          (' );');
-
-      // not an array, not a data structure
-      when variable.arraySize <= 1 
-      and (variable.name <> *blanks 
-           and variable.type <> 'datastruct'
-           and variable.type <> *blanks
-      );
-
-        if triggerType in %list (c_setValueStatement: c_replPrintStatement);
-          insertSingleLineOfGeneratedCode
-            ('replResult_replPrint(');
-        endif;
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('replResult_replEquals(');
-        endif;  
-
-        insertSingleLineOfGeneratedCode
-          ('  ' + %char(line) + ':');
-
-        insertSingleLineOfGeneratedCode
-          ('  ''' + %scanrpl('''': '': %trim(variableName)) + ''':');
-
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('  ' + expectedValue + ':');
-        endif;  
-
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName));
-
-        insertSingleLineOfGeneratedCode
-          (' );');
-
-      // not an array, is a data structure
-      when variable.arraySize <= 1 
-      and (variable.name <> *blanks and variable.type = 'datastruct');
-        insertSingleLineOfGeneratedCode
-          ('repl_...');
-        insertSingleLineOfGeneratedCode
-          (%trim(variable.scope) + '_...');
-        insertSingleLineOfGeneratedCode
-          (%trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
-        insertSingleLineOfGeneratedCode
-          ('single(');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %char(line) + ':');
-        insertSingleLineOfGeneratedCode
-          ('  ' + '''' + %trim(variableName) + ''':');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName));
-        if triggerType = c_replPrintStatement;
-          insertSingleLineOfGeneratedCode
-            (': ''PRINT''');
-        endif;
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            (': ''TEST''');
-          insertSingleLineOfGeneratedCode
-            (': ' + expectedValue);
-        endif;  
-        insertSingleLineOfGeneratedCode
-          (');');
-
-      // array, and we're evaluating a specific value
-      when (variable.arraySize > 1)
-      and arrayElement <> 0
-      and (variable.name <> *blanks and variable.type <> *blanks);
-        if triggerType in %list (c_setValueStatement: c_replPrintStatement);
-          insertSingleLineOfGeneratedCode
-            ('replResult_replPrint(');
-        endif;
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('replResult_replEquals(');
-        endif;  
-
-        insertSingleLineOfGeneratedCode
-          ('  ' + %char(line) + ':');
-
-        insertSingleLineOfGeneratedCode
-          ('  ''' + %scanrpl('''': '': %trim(variableName)) + ''':');
-
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('  ' + expectedValue + ':');
-        endif;  
-
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName));
-
-        insertSingleLineOfGeneratedCode
-          (' );');
-
-      // array, and we're evaluating all values
-      when (variable.arraySize > 1)
+    if useDedicatedResultPrinter;
+      if triggerType = c_replEqualsStatement
+      and variable.arraySize > 1
       and arrayElement = 0
-      and (variable.name <> *blanks and variable.type <> *blanks);
+      and expectedValue = *blanks;
         insertSingleLineOfGeneratedCode
-          ('repl_...');
-        insertSingleLineOfGeneratedCode  
-          (%trim(variable.scope) + '_...');
-        insertSingleLineOfGeneratedCode  
-          (%trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
-        insertSingleLineOfGeneratedCode  
-          ('multiple(');
+          (': ''TEST-READFAILURE''');
+      endif;
+      if triggerType = c_replEqualsStatement
+      and not (
+        variable.arraySize > 1
+        and arrayElement = 0
+        and expectedValue = *blanks
+      );
         insertSingleLineOfGeneratedCode
-          ('  ' + %char(line) + ':');
+          (': ''TEST''');
         insertSingleLineOfGeneratedCode
-          ('  ' + '''' + %trim(variableName) + ''':');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName));
-        if triggerType = c_replPrintStatement;
-          insertSingleLineOfGeneratedCode
-            (': ''PRINT''');
-        endif;
-        if triggerType = c_replEqualsStatement and expectedValue = *blanks;
-          insertSingleLineOfGeneratedCode
-            (': ''TEST-READFAILURE''');
-        endif; 
-        if triggerType = c_replEqualsStatement and expectedValue <> *blanks;
-          insertSingleLineOfGeneratedCode
-            (': ''TEST''');
-          insertSingleLineOfGeneratedCode
-            (': ' + expectedValue);
-        endif;  
-        insertSingleLineOfGeneratedCode
-          (');');
+          (': ' + expectedValue);
+      endif;
+    endif;
 
-      // didn't find a dedicated helper? try the generic ones!
-      other;    
-
-        if triggerType in %list (c_setValueStatement: c_replPrintStatement);
-          insertSingleLineOfGeneratedCode
-            ('replResult_replPrint(');
-        endif;
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('replResult_replEquals(');
-        endif;  
-
-        insertSingleLineOfGeneratedCode
-          ('  ' + %char(line) + ':');
-
-        insertSingleLineOfGeneratedCode
-          ('  ''' + %scanrpl('''': '': %trim(variableName)) + ''':');
-
-        if triggerType = c_replEqualsStatement;
-          insertSingleLineOfGeneratedCode
-            ('  ' + expectedValue + ':');
-        endif;  
-
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variableName));
-
-        insertSingleLineOfGeneratedCode
-          (' );');        
-
-    endsl;
+    insertSingleLineOfGeneratedCode
+      (' );');
 
   endif;
 
@@ -477,6 +417,7 @@ dcl-proc replresultEvaluationHelpers export;
     select;
       when variable.arraySize <= 1
       and variable.type <> 'datastruct';
+        // fall back onto generic helpers
 
       when variable.arraySize > 1
       and variable.type <> 'datastruct';
@@ -610,6 +551,8 @@ dcl-proc replResult_evaluate_ds_single export;
       ('     ' + %trim(variable.definition));
     insertSingleLineOfGeneratedCode
       ('     const;');
+    insertSingleLineOfGeneratedCode
+      ('    repl_result_type char(20) const options(*nopass);');
     insertSingleLineOfGeneratedCode 
       ('    repl_expected ');
     insertSingleLineOfGeneratedCode 
@@ -623,6 +566,8 @@ dcl-proc replResult_evaluate_ds_single export;
       ('     likeds(' + %trim(variable.name) + ') ');
     insertSingleLineOfGeneratedCode
       ('     const;');
+    insertSingleLineOfGeneratedCode
+      ('    repl_result_type char(20) const options(*nopass);');
     insertSingleLineOfGeneratedCode 
       ('    repl_expected');
     insertSingleLineOfGeneratedCode 
@@ -634,6 +579,15 @@ dcl-proc replResult_evaluate_ds_single export;
   endif;
   insertSingleLineOfGeneratedCode
     ('  end-pi;');
+
+  insertSingleLineOfGeneratedCode
+    ('  dcl-s repl_result_type_wk char(20) inz(''EVALUATION'');');
+  insertSingleLineOfGeneratedCode
+    ('  if %parms() >= %parmnum(repl_result_type);');
+  insertSingleLineOfGeneratedCode
+    ('    repl_result_type_wk = repl_result_type;');
+  insertSingleLineOfGeneratedCode
+    ('  endif;');
 
   prepareListOfDataStructureFields(variable.name: variable.scope);
 
@@ -652,14 +606,8 @@ dcl-proc replResult_evaluate_ds_single export;
       insertSingleLineOfGeneratedCode
         ('if %parms >= %parmnum(repl_expected);');
 
-        insertSingleLineOfGeneratedCode
-          ('  repl_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variable.scope) + '_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
-        insertSingleLineOfGeneratedCode  
-          ('  single(');
+      if shouldUseDedicatedResultPrinter(proc_subField);
+        writeResultPrinterProc(c_replEqualsStatement: proc_subField);
         insertSingleLineOfGeneratedCode
           ('    repl_line: ');
         insertSingleLineOfGeneratedCode
@@ -670,18 +618,26 @@ dcl-proc replResult_evaluate_ds_single export;
           ('    repl_expected.' + %trim(subFieldOnly.name));
         insertSingleLineOfGeneratedCode
           ('  );');
+      else;
+        insertSingleLineOfGeneratedCode
+          ('  replResult_replEquals(');
+        insertSingleLineOfGeneratedCode
+          ('    repl_line: ');
+        insertSingleLineOfGeneratedCode
+          ('    %trim(repl_name) + ''.' + %trim(subFieldOnly.name) + ''':');
+        insertSingleLineOfGeneratedCode
+          ('    repl_expected.' + %trim(subFieldOnly.name) + ':');
+        insertSingleLineOfGeneratedCode
+          ('    ' + %trim(subField.name));
+        insertSingleLineOfGeneratedCode
+          ('  );');
+      endif;
 
       insertSingleLineOfGeneratedCode
         ('else;');
 
-        insertSingleLineOfGeneratedCode
-          ('  repl_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variable.scope) + '_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
-        insertSingleLineOfGeneratedCode  
-          ('  single(');
+      if shouldUseDedicatedResultPrinter(proc_subField);
+        writeResultPrinterProc(c_replPrintStatement: proc_subField);
         insertSingleLineOfGeneratedCode
           ('    repl_line: ');
         insertSingleLineOfGeneratedCode
@@ -692,6 +648,18 @@ dcl-proc replResult_evaluate_ds_single export;
           ('    repl_result_type_wk');
         insertSingleLineOfGeneratedCode
           ('  );');
+      else;
+        insertSingleLineOfGeneratedCode
+          ('  replResult_replPrint(');
+        insertSingleLineOfGeneratedCode
+          ('    repl_line: ');
+        insertSingleLineOfGeneratedCode
+          ('    %trim(repl_name) + ''.' + %trim(subFieldOnly.name) + ''':');
+        insertSingleLineOfGeneratedCode
+          ('    ' + %trim(subField.name));
+        insertSingleLineOfGeneratedCode
+          ('  );');
+      endif;
 
       insertSingleLineOfGeneratedCode
         ('endif;');
@@ -701,14 +669,7 @@ dcl-proc replResult_evaluate_ds_single export;
       insertSingleLineOfGeneratedCode
         ('if %parms >= %parmnum(repl_expected);');
 
-        insertSingleLineOfGeneratedCode
-          ('  repl_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variable.scope) + '_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
-        insertSingleLineOfGeneratedCode
-          ('  multiple(');
+      writeResultPrinterProc(c_replEqualsStatement: proc_subField);
         insertSingleLineOfGeneratedCode
           ('    repl_line: ');
         insertSingleLineOfGeneratedCode
@@ -725,14 +686,7 @@ dcl-proc replResult_evaluate_ds_single export;
       insertSingleLineOfGeneratedCode
         ('else;');
 
-        insertSingleLineOfGeneratedCode
-          ('  repl_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(variable.scope) + '_...');
-        insertSingleLineOfGeneratedCode
-          ('  ' + %trim(%scanrpl('.':'_':%char(proc_subField.id))) + '_...');
-        insertSingleLineOfGeneratedCode
-          ('  multiple(');
+      writeResultPrinterProc(c_replPrintStatement: proc_subField);
         insertSingleLineOfGeneratedCode
           ('    repl_line: ');
         insertSingleLineOfGeneratedCode
@@ -762,6 +716,11 @@ dcl-proc replResult_evaluate_ds_multiple export;
   dcl-pi *n;
     variable likeds(t_variable) const;
   end-pi;
+
+  dcl-ds elementVariable likeds(t_variable);
+
+  elementVariable = variable;
+  elementVariable.arraySize = 1;
 
   insertSingleLineOfGeneratedCode
     ('dcl-proc repl_...');
@@ -828,14 +787,7 @@ dcl-proc replResult_evaluate_ds_multiple export;
 
     insertSingleLineOfGeneratedCode
       ('  for repl_j = 1 to ' + %char(variable.arraySize) + ';');
-    insertSingleLineOfGeneratedCode
-      ('    repl_...');
-    insertSingleLineOfGeneratedCode  
-      ('    ' + %trim(variable.scope) + '_...');
-    insertSingleLineOfGeneratedCode  
-      ('    ' + %trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
-    insertSingleLineOfGeneratedCode  
-      ('    single(');
+    writeResultPrinterProc(c_replEqualsStatement: elementVariable);
     insertSingleLineOfGeneratedCode
       ('      repl_line: ');
     insertSingleLineOfGeneratedCode
@@ -856,14 +808,7 @@ dcl-proc replResult_evaluate_ds_multiple export;
 
     insertSingleLineOfGeneratedCode
       ('  for repl_j = 1 to ' + %char(variable.arraySize) + ';');
-    insertSingleLineOfGeneratedCode
-      ('    repl_...');
-    insertSingleLineOfGeneratedCode  
-      ('    ' + %trim(variable.scope) + '_...');
-    insertSingleLineOfGeneratedCode  
-      ('    ' + %trim(%scanrpl('.':'_':%char(variable.id))) + '_...');
-    insertSingleLineOfGeneratedCode  
-      ('    single(');
+    writeResultPrinterProc(c_replPrintStatement: elementVariable);
     insertSingleLineOfGeneratedCode
       ('      repl_line: ');
     insertSingleLineOfGeneratedCode
